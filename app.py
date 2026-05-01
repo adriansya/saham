@@ -8,7 +8,7 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # --- KONFIGURASI HALAMAN ---
-st.set_page_config(page_title="Scanner Saham Cap > 1T", layout="wide")
+st.set_page_config(page_title="Scanner Saham", layout="wide")
 
 def round_bei(price):
     """Fungsi pembulatan ke ATAS sesuai fraksi harga BEI."""
@@ -18,6 +18,7 @@ def round_bei(price):
     elif price < 2000: f = 5
     elif price < 5000: f = 10
     else: f = 25
+    # Menggunakan math.ceil untuk pembulatan ke atas
     return int(math.ceil(price / f) * f)
 
 def jalankan_scanner_final(tickers, tgl, jam):
@@ -27,7 +28,7 @@ def jalankan_scanner_final(tickers, tgl, jam):
     tgl_dt = datetime.strptime(tgl_str, "%Y-%m-%d")
     tgl_besok = (tgl_dt + timedelta(days=1)).strftime("%Y-%m-%d")
     
-    # Logika Konversi WIB ke UTC (-7)
+    # Logika Konversi WIB ke UTC (-7) sesuai Colab
     jam_utc = f"{int(jam.split(':')[0]) - 7:02d}:{jam.split(':')[1]}"
     
     progress_bar = st.progress(0)
@@ -36,25 +37,16 @@ def jalankan_scanner_final(tickers, tgl, jam):
     for i, ticker in enumerate(tickers):
         try:
             symbol = ticker + ".JK"
-            status_text.text(f"Memeriksa {symbol} (Market Cap & Price)...")
+            status_text.text(f"Memeriksa {symbol}...")
             
-            t_obj = yf.Ticker(symbol)
-            
-            # --- KRITERIA MARKET CAP > 1 TRILIUN ---
-            info = t_obj.info
-            mkt_cap = info.get('marketCap', 0)
-            
-            if mkt_cap < 1_000_000_000_000: # Skip jika di bawah 1 Triliun
-                progress_bar.progress((i + 1) / len(tickers))
-                continue
-
             df_5m = yf.download(symbol, start=tgl_str, end=tgl_besok, interval="5m", progress=False)
-            df_day = t_obj.history(period="1d")
+            df_day = yf.Ticker(symbol).history(period="1d")
             
             if isinstance(df_5m.columns, pd.MultiIndex):
                 df_5m.columns = df_5m.columns.get_level_values(0)
 
             if not df_5m.empty and not df_day.empty:
+                # Cari jam berdasarkan format string UTC
                 match = df_5m[df_5m.index.strftime('%H:%M') == jam_utc]
                 if match.empty: continue
 
@@ -70,6 +62,7 @@ def jalankan_scanner_final(tickers, tgl, jam):
                     target_val = lo * 1.24
                     range_fibo = target_val - lo
 
+                    # Perhitungan level dengan pembulatan ke atas
                     s1 = round_bei(lo + (range_fibo * 0.886))
                     s2 = round_bei(lo + (range_fibo * 0.786))
                     s3 = round_bei(lo + (range_fibo * 0.618))
@@ -88,7 +81,6 @@ def jalankan_scanner_final(tickers, tgl, jam):
 
                     results.append({
                         "Ticker": ticker,
-                        "Market Cap (T)": round(mkt_cap / 1_000_000_000_000, 2),
                         "Low": int(lo),
                         "Last H %": f"{gain_h_pct:.2f}%",
                         "Last H": int(last_h),
@@ -99,7 +91,7 @@ def jalankan_scanner_final(tickers, tgl, jam):
                         "Target": round_bei(target_val),
                         "TP1": tp1,
                         "TP2": tp2,
-                        "Sort_Val": gain_c_pct
+                        "Sort_Val": gain_h_pct
                     })
                     
         except Exception: 
@@ -118,8 +110,8 @@ def jalankan_scanner_final(tickers, tgl, jam):
     return df
 
 # --- ANTARMUKA PENGGUNA (UI) ---
-st.title("🚀 Scanner Saham Syariah (ISSI)")
-st.subheader("Filter: Market Cap > Rp 1 Triliun & Gain H > 21.26%")
+st.title("🚀 Scanner Saham (Up Rounding)")
+st.write("Mencari saham dengan lonjakan harga signifikan. Semua pembulatan harga menggunakan pembulatan ke atas.")
 
 with st.sidebar:
     st.header("Parameter Scan")
@@ -128,90 +120,20 @@ with st.sidebar:
     btn_scan = st.button("Mulai Scan")
 
 stock_ticker = [
-    'AADI', 'AALI', 'ABMM', 'ACES', 'ACST', 'ADCP', 'ADES', 'ADHI', 'ADMG', 'ADMR', 
-    'ADRO', 'AGAR', 'AGII', 'AIMS', 'AISA', 'AKKU', 'AKPI', 'AKRA', 'AKSI', 'ALDO', 
-    'ALKA', 'AMAN', 'AMFG', 'AMIN', 'ANDI', 'ANJT', 'ANTM', 'APII', 'APLI', 'APLN', 
-    'ARCI', 'AREA', 'ARGO', 'ARII', 'ARNA', 'ARTA', 'ASGR', 'ASHA', 'ASII', 'ASLC', 
-    'ASLI', 'ASPI', 'ASRI', 'ASSA', 'ATAP', 'ATIC', 'ATLA', 'AUTO', 'AVIA', 'AWAN', 
-    'AXIO', 'AYAM', 'AYLS', 'BABY', 'BAIK', 'BANK', 'BAPI', 'BATA', 'BATR', 'BAUT', 
-    'BAYU', 'BBRM', 'BBSS', 'BCIP', 'BDKR', 'BEEF', 'BELI', 'BELL', 'BESS', 'BEST', 
-    'BIKE', 'BINO', 'BIPP', 'BIRD', 'BISI', 'BKDP', 'BKSL', 'BLES', 'BLOG', 'BLTA', 
-    'BLTZ', 'BLUE', 'BMHS', 'BMSR', 'BMTR', 'BNBR', 'BOAT', 'BOBA', 'BOGA', 'BOLA', 
-    'BOLT', 'BRAM', 'BRIS', 'BRMS', 'BRNA', 'BRPT', 'BRRC', 'BSBK', 'BSDE', 'BSML', 
-    'BSSR', 'BTPS', 'BUAH', 'BUKK', 'BULL', 'BUMI', 'BUVA', 'BYAN', 'CAKK', 'CAMP', 
-    'CANI', 'CARE', 'CASS', 'CBDK', 'CBPE', 'CBRE', 'CCSI', 'CEKA', 'CGAS', 'CHEK', 
-    'CHEM', 'CINT', 'CITA', 'CITY', 'CLEO', 'CLPI', 'CMNP', 'CMPP', 'CMRY', 'CNKO', 
-    'CNMA', 'COAL', 'CPIN', 'CPRO', 'CRAB', 'CRSN', 'CSAP', 'CSIS', 'CSMI', 'CSRA', 
-    'CTBN', 'CTRA', 'CYBR', 'DAAZ', 'DADA', 'DATA', 'DAYA', 'DCII', 'DEFI', 'DEPO', 
-    'DEWA', 'DEWI', 'DGIK', 'DGNS', 'DGWG', 'DILD', 'DIVA', 'DKFT', 'DKHH', 'DMAS', 
-    'DMMX', 'DMND', 'DOOH', 'DOSS', 'DRMA', 'DSFI', 'DSNG', 'DSSA', 'DUTI', 'DVLA', 
-    'DWGL', 'DYAN', 'EAST', 'ECII', 'EDGE', 'EKAD', 'ELIT', 'ELPI', 'ELSA', 'ELTY', 
-    'EMDE', 'ENAK', 'ENRG', 'EPAC', 'EPMT', 'ERAA', 'ERAL', 'ESIP', 'ESSA', 'ESTA', 
-    'EXCL', 'FAST', 'FASW', 'FILM', 'FIRE', 'FISH', 'FITT', 'FMII', 'FOLK', 'FOOD', 
-    'FORE', 'FPNI', 'FUTR', 'FWCT', 'GDST', 'GDYR', 'GEMA', 'GEMS', 'GGRP', 'GHON', 
-    'GIAA', 'GJTL', 'GLVA', 'GMTD', 'GOLD', 'GOLF', 'GOOD', 'GPRA', 'GPSO', 'GRIA', 
-    'GRPH', 'GTBO', 'GTRA', 'GTSI', 'GULA', 'GUNA', 'GWSA', 'GZCO', 'HADE', 'HAIS', 
-    'HALO', 'HATM', 'HDIT', 'HEAL', 'HERO', 'HEXA', 'HGII', 'HITS', 'HOKI', 'HOMI', 
-    'HOPE', 'HRME', 'HRUM', 'HUMI', 'HYGN', 'IATA', 'IBST', 'ICBP', 'ICON', 'IDPR', 
-    'IFII', 'IFSH', 'IGAR', 'IIKP', 'IKAI', 'IKAN', 'IKBI', 'IKPM', 'IMPC', 'INCI', 
-    'INCO', 'INDF', 'INDR', 'INDS', 'INDX', 'INDY', 'INET', 'INKP', 'INPP', 'INTD', 
-    'INTP', 'IOTF', 'IPCC', 'IPCM', 'IPOL', 'IPTV', 'IRRA', 'IRSX', 'ISAT', 'ISSP', 
-    'ITMA', 'ITMG', 'JAST', 'JATI', 'JAWA', 'JAYA', 'JECC', 'JGLE', 'JIHD', 'JKON', 
-    'JMAS', 'JPFA', 'JRPT', 'JSMR', 'JSPT', 'JTPE', 'KAQI', 'KARW', 'KBAG', 'KBLI', 
-    'KBLM', 'KDSI', 'KDTN', 'KEEN', 'KEJU', 'KETR', 'KIAS', 'KICI', 'KIJA', 'KINO', 
-    'KIOS', 'KJEN', 'KKES', 'KKGI', 'KLAS', 'KLBF', 'KMDS', 'KOBX', 'KOCI', 'KOIN', 
-    'KOKA', 'KONI', 'KOPI', 'KOTA', 'KPIG', 'KREN', 'KRYA', 'KSIX', 'KUAS', 'LABA', 
-    'LABS', 'LAJU', 'LAND', 'LCKM', 'LION', 'LIVE', 'LMPI', 'LMSH', 'LPCK', 'LPIN', 
-    'LPKR', 'LPLI', 'LPPF', 'LRNA', 'LSIP', 'LTLS', 'LUCK', 'MAHA', 'MAIN', 'MAPA', 
-    'MAPB', 'MAPI', 'MARK', 'MAXI', 'MBAP', 'MBMA', 'MBTO', 'MCAS', 'MCOL', 'MDIY', 
-    'MDKA', 'MDKI', 'MDLA', 'MEDC', 'MEDS', 'MERI', 'MERK', 'META', 'MFMI', 'MGNA', 
-    'MHKI', 'MICE', 'MIDI', 'MIKA', 'MINA', 'MINE', 'MIRA', 'MITI', 'MKAP', 'MKPI', 
-    'MKTR', 'MLIA', 'MLPL', 'MLPT', 'MMIX', 'MMLP', 'MNCN', 'MORA', 'MPIX', 'MPMX', 
-    'MPOW', 'MPPA', 'MPRO', 'MRAT', 'MSIN', 'MSJA', 'MSKY', 'MSTI', 'MTDL', 'MTEL', 
-    'MTFN', 'MTLA', 'MTMH', 'MTPS', 'MTSM', 'MUTU', 'MYOH', 'MYOR', 'NAIK', 'NASA', 
-    'NASI', 'NCKL', 'NELY', 'NEST', 'NETV', 'NFCX', 'NICE', 'NICL', 'NIKL', 'NPGF', 
-    'NRCA', 'NTBK', 'NZIA', 'OASA', 'OBAT', 'OBMD', 'OILS', 'OKAS', 'OMED', 'OMRE', 
-    'PADA', 'PALM', 'PAMG', 'PANI', 'PANR', 'PART', 'PBID', 'PBSA', 'PCAR', 'PDES', 
-    'PDPP', 'PEHA', 'PEVE', 'PGAS', 'PGEO', 'PGLI', 'PGUN', 'PICO', 'PIPA', 'PJAA', 
-    'PJHB', 'PKPK', 'PLIN', 'PMJS', 'PMUI', 'PNBS', 'PNGO', 'PNSE', 'POLI', 'POLU', 
-    'PORT', 'POWR', 'PPRE', 'PPRI', 'PPRO', 'PRAY', 'PRDA', 'PRIM', 'PSAB', 'PSAT', 
-    'PSDN', 'PSGO', 'PSKT', 'PSSI', 'PTBA', 'PTIS', 'PTMP', 'PTMR', 'PTPP', 'PTPS', 
-    'PTPW', 'PTSN', 'PTSP', 'PURA', 'PURI', 'PWON', 'PZZA', 'RAAM', 'RAFI', 'RAJA', 
-    'RALS', 'RANC', 'RATU', 'RBMS', 'RDTX', 'RGAS', 'RIGS', 'RISE', 'RMKE', 'RMKO', 
-    'ROCK', 'RODA', 'RONY', 'ROTI', 'RSGK', 'RUIS', 'SAFE', 'SAGE', 'SAME', 'SAMF', 
-    'SAPX', 'SATU', 'SBMA', 'SCCO', 'SCNP', 'SCPI', 'SEMA', 'SGER', 'SGRO', 'SHID', 
-    'SHIP', 'SICO', 'SIDO', 'SILO', 'SIMP', 'SIPD', 'SKBM', 'SKLT', 'SKRN', 'SLIS', 
-    'SMAR', 'SMBR', 'SMCB', 'SMDM', 'SMDR', 'SMGA', 'SMGR', 'SMIL', 'SMKL', 'SMLE', 
-    'SMMT', 'SMRA', 'SMSM', 'SNLK', 'SOCI', 'SOHO', 'SOLA', 'SONA', 'SOSS', 'SOTS', 
-    'SPMA', 'SPTO', 'SRTG', 'SSIA', 'SSTM', 'STAA', 'STTP', 'SULI', 'SUNI', 'SUPR', 
-    'SURI', 'SWID', 'TALF', 'TAMA', 'TAMU', 'TAPG', 'TARA', 'TAXI', 'TBMS', 'TCID', 
-    'TCPI', 'TEBE', 'TFAS', 'TFCO', 'TGKA', 'TGUK', 'TINS', 'TIRA', 'TIRT', 'TKIM', 
-    'TLDN', 'TLKM', 'TMAS', 'TMPO', 'TNCA', 'TOBA', 'TOOL', 'TOSK', 'TOTL', 'TOTO', 
-    'TPIA', 'TPMA', 'TRIS', 'TRJA', 'TRON', 'TRST', 'TRUE', 'TRUK', 'TSPC', 'TYRE', 
-    'UANG', 'UCID', 'UFOE', 'ULTJ', 'UNIC', 'UNIQ', 'UNTR', 'UNVR', 'UVCR', 'VAST', 
-    'VERN', 'VICI', 'VISI', 'VKTR', 'VOKS', 'WAPO', 'WEGE', 'WEHA', 'WINR', 'WINS', 
-    'WIRG', 'WMUU', 'WOOD', 'WOWS', 'WTON', 'YELO', 'YPAS', 'YUPI', 'ZATA', 'ZONE', 
-    'ZYRX'
+    "AADI", "ACES", "ADMR", "ADRO", "AKRA", "ANTM", "ASII", "AVIA", "BKSL", "BRIS",
+    "BRMS", "BRPT", "BSDE", "BTPS", "BUMI", "CMRY", "CPIN", "CTRA", "DSNG", "DSSA",
+    "ELSA", "ENRG", "ERAA", "ESSA", "EXCL", "HEAL", "HRUM", "ICBP", "INCO", "INDF",
+    "INDY", "INKP", "INTP", "ISAT", "ITMG", "JPFA", "JSMR", "KIJA", "KLBF", "KPIG",
+    "LSIP", "MAPA", "MAPI", "MARK", "MBMA", "MDKA", "MEDC", "MIKA", "MTEL", "MYOR",
+    "NCKL", "PANI", "PGAS", "PGEO", "PTBA", "PTPP", "PWON", "RATU", "SIDO", "SMGR",
+    "SMRA", "SRTG", "SSIA", "TAPG", "TCPI", "TKIM", "TLKM", "TPIA", "UNTR", "UNVR"
 ]
 
 if btn_scan:
     df_hasil = jalankan_scanner_final(stock_ticker, tgl_input, jam_input)
     
     if not df_hasil.empty:
-        st.success(f"Ditemukan {len(df_hasil)} saham yang memenuhi kriteria!")
-        
-        # Tabel Utama
+        st.success(f"Ditemukan {len(df_hasil)} saham!")
         st.dataframe(df_hasil, use_container_width=True)
-        
-        # Ringkasan di bagian bawah
-        st.divider()
-        st.write("### 📋 Daftar Nama Saham Terdeteksi:")
-        
-        # Menampilkan dalam bentuk kolom agar rapi
-        cols = st.columns(5)
-        tickers_found = df_hasil['Ticker'].tolist()
-        for idx, t in enumerate(tickers_found):
-            cols[idx % 5].info(f"**{t}**")
-            
     else:
-        st.warning("Tidak ada saham yang memenuhi kriteria Market Cap > 1T dan % Last H > 21.26%")
+        st.warning("Tidak ada saham yang memenuhi kriteria % Last H > 21.26%")
