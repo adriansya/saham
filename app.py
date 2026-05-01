@@ -4,10 +4,11 @@ import pandas as pd
 from datetime import datetime, timedelta
 import math
 
-# --- KONFIGURASI ---
+# --- KONFIGURASI HALAMAN ---
 st.set_page_config(page_title="Scanner Saham", layout="wide")
 
 def round_bei(price):
+    """Fungsi untuk membulatkan harga sesuai fraksi harga BEI."""
     if price <= 0: return 0
     if price < 200: f = 1
     elif price < 500: f = 2
@@ -29,7 +30,7 @@ def jalankan_scanner(tickers, tgl, jam):
             symbol = f"{ticker}.JK"
             status_text.text(f"Memeriksa {symbol}...")
             
-            # 1. Ambil data 5 menit
+            # 1. Download data 5 menit (Intraday)
             data_raw = yf.download(symbol, start=tgl_str, end=tgl_besok, interval="5m", progress=False)
             
             if isinstance(data_raw.columns, pd.MultiIndex):
@@ -37,22 +38,28 @@ def jalankan_scanner(tickers, tgl, jam):
 
             if data_raw.empty: continue
 
-            # 2. Pastikan Timezone bersih
+            # 2. Bersihkan Timezone
             data_raw.index = data_raw.index.tz_localize(None)
             
-            # 3. Logika mencari jam 15:20 yang SANGAT KETAT
+            # 3. Logika Sinkronisasi Jam 15:20 (Menggunakan Jendela Waktu)
+            # Menghindari selisih label waktu antara Yahoo Finance dan TradingView
             target_time = datetime.strptime(f"{tgl_str} {jam}", "%Y-%m-%d %H:%M")
+            start_window = target_time - timedelta(minutes=5)
+            end_window = target_time + timedelta(minutes=5)
             
-            # Kita cari index yang paling dekat dengan jam 15:20
-            # method='pad' artinya mengambil data terakhir yang tersedia SEBELUM atau PAS jam tersebut
-            idx = data_raw.index.get_indexer([target_time], method='pad')[0]
+            window_data = data_raw.loc[start_window:end_window]
             
-            if idx != -1:
-                lo = float(data_raw['Low'].iloc[idx])
+            if not window_data.empty:
+                lo = float(window_data['Low'].min())
             else:
-                continue
+                # Fallback jika window kosong
+                idx = data_raw.index.get_indexer([target_time], method='pad')[0]
+                if idx != -1:
+                    lo = float(data_raw['Low'].iloc[idx])
+                else:
+                    continue
 
-            # 4. Ambil data Daily untuk High & Close hari ini
+            # 4. Ambil data Harian untuk High dan Close hari ini
             ticker_obj = yf.Ticker(symbol)
             df_day = ticker_obj.history(period="1d")
             if df_day.empty: continue
@@ -63,7 +70,7 @@ def jalankan_scanner(tickers, tgl, jam):
             gain_h_pct = ((last_h - lo) / lo) * 100
             gain_c_pct = ((last_c - lo) / lo) * 100
 
-            # 5. Filter kriteria (Sesuai Colab)
+            # 5. Filter Kriteria Scanner (> 21.26%)
             if gain_h_pct > 21.26:
                 target_val = lo * 1.24
                 range_fibo = target_val - lo
@@ -76,17 +83,26 @@ def jalankan_scanner(tickers, tgl, jam):
                 tp1 = round_bei(lo + (range_fibo * 1.272))
                 tp2 = round_bei(lo + (range_fibo * 1.618))
                 
-                # Cek Posisi
+                # Penentuan Posisi terhadap Support
                 if last_c >= s1: pos = "> S1"
+                elif last_c >= s2: pos = "> S2"
+                elif last_c >= s3: pos = "> S3"
+                elif last_c >= s4: pos = "> S4"
                 elif last_c >= cl: pos = "> CL"
                 else: pos = "< CL"
 
                 results.append({
-                    "Ticker": ticker, "Low": int(lo), 
-                    "Last H %": gain_h_pct, "Last H": int(last_h),
-                    "Last C %": f"{gain_c_pct:.2f}%", "Last C": int(last_c), 
-                    "Pos": pos, "S1": s1, "S2": s2, "S3": s3, "S4": s4, "CL": cl,
-                    "Target": round_bei(target_val), "TP1": tp1, "TP2": tp2
+                    "Ticker": ticker, 
+                    "Low": int(lo), 
+                    "Last H %": gain_h_pct, # Disimpan sebagai float untuk sorting
+                    "Last H": int(last_h),
+                    "Last C %": f"{gain_c_pct:.2f}%",
+                    "Last C": int(last_c), 
+                    "Pos": pos,
+                    "S1": s1, "S2": s2, "S3": s3, "S4": s4, "CL": cl,
+                    "Target": round_bei(target_val), 
+                    "TP1": tp1, 
+                    "TP2": tp2
                 })
                 
         except Exception:
@@ -97,15 +113,17 @@ def jalankan_scanner(tickers, tgl, jam):
     status_text.text("Scan selesai!")
     return pd.DataFrame(results)
 
-# --- UI ---
+# --- ANTARMUKA PENGGUNA (UI) ---
 st.title("🚀 Scanner Saham")
+st.write("Mencari saham dengan lonjakan harga signifikan berdasarkan acuan waktu tertentu.")
 
 with st.sidebar:
-    st.header("Input Parameter")
+    st.header("Parameter Scan")
     tgl_input = st.date_input("Tanggal Acuan Low", datetime(2026, 4, 15))
     jam_input = st.text_input("Jam Acuan (WIB)", "15:20")
     btn_scan = st.button("Mulai Scan")
 
+# Daftar Ticker JII (Bisa disesuaikan)
 tickers_jii = ["AADI", "ACES", "ADMR", "ADRO", "AKRA", "ANTM", "ASII", "AVIA", "BKSL", "BRIS", 
                "BRMS", "BRPT", "BSDE", "BTPS", "BUMI", "CMRY", "CPIN", "CTRA", "DSNG", "DSSA", 
                "ELSA", "ENRG", "ERAA", "ESSA", "EXCL", "HEAL", "HRUM", "ICBP", "INCO", "INDF", 
@@ -119,12 +137,12 @@ if btn_scan:
     if not df_hasil.empty:
         st.success(f"Ditemukan {len(df_hasil)} saham!")
         
-        # Sorting berdasarkan Last H % (yang masih berupa angka)
-        df_hasil = df_hasil.sort_values("Last H %", ascending=False)
+        # Urutkan berdasarkan kenaikan High tertinggi
+        df_display = df_hasil.sort_values("Last H %", ascending=False)
         
-        # Baru ubah format tampilan Last H % menjadi string persen
-        df_hasil["Last H %"] = df_hasil["Last H %"].apply(lambda x: f"{x:.2f}%")
+        # Format kolom persentase untuk tampilan tabel
+        df_display["Last H %"] = df_display["Last H %"].apply(lambda x: f"{x:.2f}%")
         
-        st.dataframe(df_hasil, use_container_width=True)
+        st.dataframe(df_display, use_container_width=True)
     else:
-        st.warning("Tidak ada saham yang memenuhi kriteria.")
+        st.warning("Tidak ada saham yang memenuhi kriteria scan.")
