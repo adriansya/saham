@@ -91,7 +91,7 @@ def jalankan_scanner_final(tickers, tgl, jam):
                         "Target": round_bei(target_val),
                         "TP1": tp1,
                         "TP2": tp2,
-                        "Sort_Val": gain_h_pct
+                        "Sort_Val": gain_c_pct
                     })
                     
         except Exception: 
