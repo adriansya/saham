@@ -116,7 +116,7 @@ def jalankan_scanner_final(tickers, tgl, jam):
 # --- ANTARMUKA PENGGUNA (UI) ---
 st.title("Scanner Saham Naik 🚀")
 st.write("✅ Mencari saham dengan lonjakan harga signifikan diatas 24% kurang dari 1 bulan.")
-st.write("✅ List screening adalah saham syariah yang masuk dalam indeks JII70, IDXSHAGROW, dan KOMPAS100.")
+st.write("✅ List screening adalah saham syariah yang masuk dalam  Gabungan Indeks JII70, KOMPAS100, IDX-MES-BUMN, & IDX-SHA-GROW.")
 st.write("✅ Perhitungan Support (S), Cut Loss (CL), dan Taking Profit (TP) dengan Fibonacci.\n Support terkuat pada area Golden Ratio S3 (0.618) dan S4 (0.5)")
 
 with st.sidebar:
@@ -126,6 +126,7 @@ with st.sidebar:
     jam_input = "15:20"
     btn_scan = st.button("Mulai Scan")
 
+# Master List Saham Syariah Pilihan (Gabungan JII70, Kompas100, IDX-MES-BUMN, & IDXSHAGROW)
 stock_ticker = [
     'AADI', 'ACES', 'ADHI', 'ADMR', 'ADRO', 'AKRA', 'ANTM', 'ARCI', 'ASII', 'AVIA', 
     'BKSL', 'BRIS', 'BRMS', 'BRPT', 'BSDE', 'BTPS', 'BULL', 'BUMI', 'BUVA', 'CBDK', 
