@@ -57,8 +57,8 @@ def jalankan_scanner_final(tickers, tgl, jam):
                 gain_c_pct = ((last_c - lo) / lo) * 100
                 gain_h_pct = ((last_h - lo) / lo) * 100
 
-                # FILTER: Area S1 (21.26%)
-                if gain_h_pct > 21.26:
+                # FILTER: di atas 23.9%
+                if gain_h_pct > 23.9:
                     target_val = lo * 1.24
                     range_fibo = target_val - lo
 
@@ -82,13 +82,13 @@ def jalankan_scanner_final(tickers, tgl, jam):
                     results.append({
                         "Ticker": ticker,
                         "Low": int(lo),
-                        "Last H %": f"{gain_h_pct:.2f}%",
-                        "Last H": int(last_h),
-                        "Last C %": f"{gain_c_pct:.2f}%",
-                        "Last C": int(last_c),
+                        "Last High %": f"{gain_h_pct:.2f}%",
+                        "Last High": int(last_h),
+                        "Last Close %": f"{gain_c_pct:.2f}%",
+                        "Last Close": int(last_c),
                         "Pos": pos,
                         "S1": s1, "S2": s2, "S3": s3, "S4": s4, "CL": cl,
-                        "Target": round_bei(target_val),
+                        "T24%": round_bei(target_val),
                         "TP1": tp1,
                         "TP2": tp2,
                         "Sort_Val": gain_h_pct
