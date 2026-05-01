@@ -86,7 +86,7 @@ def jalankan_scanner_final(tickers, tgl, jam):
                         "Last High": int(last_h),
                         "Last Close %": f"{gain_c_pct:.2f}%",
                         "Last Close": int(last_c),
-                        "Pos": pos,
+                        "Position": pos,
                         "S1": s1, "S2": s2, "S3": s3, "S4": s4, "CL": cl,
                         "T24%": round_bei(target_val),
                         "TP1": tp1,
