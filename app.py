@@ -77,7 +77,7 @@ def jalankan_scanner(tickers, tgl, jam):
     return pd.DataFrame(results)
 
 # --- Tampilan Web ---
-st.title("🚀 Scanner Saham JII70 - Fibo Target 24%")
+st.title("🚀 Scanner Saham - Fibo Target 24%")
 st.sidebar.header("Input Parameter")
 
 tgl_input = st.sidebar.date_input("Tanggal Acuan Low", datetime.now() - timedelta(days=1))
