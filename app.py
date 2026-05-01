@@ -122,7 +122,8 @@ st.write("✅ Perhitungan Support (S), Cut Loss (CL), dan Taking Profit (TP) den
 with st.sidebar:
     st.header("Parameter Scan")
     tgl_input = st.date_input("Tanggal Acuan Low", datetime(2026, 4, 15).date())
-    jam_input = st.text_input("Jam Acuan (WIB)", "15:20")
+    # jam_input = st.text_input("Jam Acuan (WIB)", "15:20")
+    jam_input = 15:20
     btn_scan = st.button("Mulai Scan")
 
 stock_ticker = [
