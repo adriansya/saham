@@ -37,7 +37,7 @@ def jalankan_scanner_final(tickers, tgl, jam):
     for i, ticker in enumerate(tickers):
         try:
             symbol = ticker + ".JK"
-            status_text.text(f"Memeriksa {symbol}...")
+            status_text.text(f"Memeriksa {ticker} ...")
             
             df_5m = yf.download(symbol, start=tgl_str, end=tgl_besok, interval="5m", progress=False)
             df_day = yf.Ticker(symbol).history(period="1d")
