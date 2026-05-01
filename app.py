@@ -11,23 +11,24 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 st.set_page_config(page_title="Scanner Saham", layout="wide")
 
 def round_bei(price):
+    """Fungsi pembulatan ke ATAS sesuai fraksi harga BEI."""
     if price <= 0: return 0
     if price < 200: f = 1
     elif price < 500: f = 2
     elif price < 2000: f = 5
     elif price < 5000: f = 10
     else: f = 25
-    return int(math.floor(price / f) * f)
+    # Menggunakan math.ceil untuk pembulatan ke atas
+    return int(math.ceil(price / f) * f)
 
 def jalankan_scanner_final(tickers, tgl, jam):
     results = []
     
-    # Ambil string tanggal dari input Streamlit (tipe datetime.date)
     tgl_str = tgl.strftime("%Y-%m-%d")
     tgl_dt = datetime.strptime(tgl_str, "%Y-%m-%d")
     tgl_besok = (tgl_dt + timedelta(days=1)).strftime("%Y-%m-%d")
     
-    # LOGIKA EXACT DARI COLAB: Konversi WIB ke UTC (-7)
+    # Logika Konversi WIB ke UTC (-7) sesuai Colab
     jam_utc = f"{int(jam.split(':')[0]) - 7:02d}:{jam.split(':')[1]}"
     
     progress_bar = st.progress(0)
@@ -41,12 +42,11 @@ def jalankan_scanner_final(tickers, tgl, jam):
             df_5m = yf.download(symbol, start=tgl_str, end=tgl_besok, interval="5m", progress=False)
             df_day = yf.Ticker(symbol).history(period="1d")
             
-            # Antisipasi jika yfinance mengembalikan MultiIndex columns
             if isinstance(df_5m.columns, pd.MultiIndex):
                 df_5m.columns = df_5m.columns.get_level_values(0)
 
             if not df_5m.empty and not df_day.empty:
-                # LOGIKA EXACT DARI COLAB: Cari jam berdasarkan format string UTC
+                # Cari jam berdasarkan format string UTC
                 match = df_5m[df_5m.index.strftime('%H:%M') == jam_utc]
                 if match.empty: continue
 
@@ -62,6 +62,7 @@ def jalankan_scanner_final(tickers, tgl, jam):
                     target_val = lo * 1.24
                     range_fibo = target_val - lo
 
+                    # Perhitungan level dengan pembulatan ke atas
                     s1 = round_bei(lo + (range_fibo * 0.886))
                     s2 = round_bei(lo + (range_fibo * 0.786))
                     s3 = round_bei(lo + (range_fibo * 0.618))
@@ -90,7 +91,7 @@ def jalankan_scanner_final(tickers, tgl, jam):
                         "Target": round_bei(target_val),
                         "TP1": tp1,
                         "TP2": tp2,
-                        "Sort_Val": gain_h_pct # Kolom tersembunyi untuk sorting
+                        "Sort_Val": gain_h_pct
                     })
                     
         except Exception: 
@@ -102,18 +103,15 @@ def jalankan_scanner_final(tickers, tgl, jam):
     
     df = pd.DataFrame(results)
     if not df.empty:
-        # Sort pakai nilai aslinya, lalu buang kolom Sort_Val agar tidak tampil di tabel
         df = df.sort_values(by="Sort_Val", ascending=False).drop(columns=["Sort_Val"])
-        # Reset Index agar mulus di Streamlit
         df = df.reset_index(drop=True)
-        # Bikin index mulai dari 1
         df.index = df.index + 1 
         
     return df
 
 # --- ANTARMUKA PENGGUNA (UI) ---
-st.title("🚀 Scanner Saham")
-st.write("Mencari saham dengan lonjakan harga signifikan berdasarkan acuan waktu tertentu.")
+st.title("🚀 Scanner Saham (Up Rounding)")
+st.write("Mencari saham dengan lonjakan harga signifikan. Semua pembulatan harga menggunakan pembulatan ke atas.")
 
 with st.sidebar:
     st.header("Parameter Scan")
