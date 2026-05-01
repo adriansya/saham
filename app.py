@@ -115,9 +115,9 @@ def jalankan_scanner_final(tickers, tgl, jam):
 
 # --- ANTARMUKA PENGGUNA (UI) ---
 st.title("🚀 Scanner Saham Naik")
-st.write("• Mencari saham dengan lonjakan harga signifikan diatas 24% kurang dari 1 bulan.")
-st.write("• List screening adalah saham syariah yang masuk dalam indeks JII70, IDXSHAGROW, dan KOMPAS100.")
-st.write("• Perhitungan Support (S), Cut Loss (CL), dan Taking Profit (TP) dengan Fibonacci.\n Support terkuat pada area Golden Ratio S3 (0.618) dan S4 (0.5)")
+st.write("•  Mencari saham dengan lonjakan harga signifikan diatas 24% kurang dari 1 bulan.")
+st.write("•  List screening adalah saham syariah yang masuk dalam indeks JII70, IDXSHAGROW, dan KOMPAS100.")
+st.write("•  Perhitungan Support (S), Cut Loss (CL), dan Taking Profit (TP) dengan Fibonacci.\n Support terkuat pada area Golden Ratio S3 (0.618) dan S4 (0.5)")
 
 with st.sidebar:
     st.header("Parameter Scan")
