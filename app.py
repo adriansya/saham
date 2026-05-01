@@ -116,8 +116,7 @@ def jalankan_scanner_final(tickers, tgl, jam):
 # --- ANTARMUKA PENGGUNA (UI) ---
 st.title("🚀 Scanner Saham Naik")
 st.write("Mencari saham dengan lonjakan harga signifikan diatas 24% kurang dari 1 bulan.")
-st.write("Perhitungan Support (S), Cut Loss (CL), dan Taking Profit (TP) dengan Fibonacci.")
-st.write("Support terkuat pada area Golden Ratio S3 (0.618) dan S4 (0.5)")
+st.write("Perhitungan Support (S), Cut Loss (CL), dan Taking Profit (TP) dengan Fibonacci. \nSupport terkuat pada area Golden Ratio S3 (0.618) dan S4 (0.5)")
 
 with st.sidebar:
     st.header("Parameter Scan")
