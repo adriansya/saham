@@ -130,6 +130,10 @@ if btn_scan:
     df_hasil = jalankan_scanner(tickers_jii, tgl_input, jam_input)
     if not df_hasil.empty:
         st.success(f"Ditemukan {len(df_hasil)} saham!")
-        st.dataframe(df_hasil.sort_values("sort", ascending=False).drop(columns=['sort']), use_container_width=True)
+        
+        # Perbaikan ada di sini: ganti "sort" menjadi "sort_val"
+        df_display = df_hasil.sort_values("sort_val", ascending=False).drop(columns=['sort_val'])
+        
+        st.dataframe(df_display, use_container_width=True)
     else:
-        st.error("Hasil tetap kosong. Pastikan internet stabil dan jam 15:20 memiliki data di Yahoo Finance.")
+        st.error("Tidak ada saham yang memenuhi kriteria.")
