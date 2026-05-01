@@ -120,13 +120,15 @@ with st.sidebar:
     btn_scan = st.button("Mulai Scan")
 
 stock_ticker = [
-    "AADI", "ACES", "ADMR", "ADRO", "AKRA", "ANTM", "ASII", "AVIA", "BKSL", "BRIS",
-    "BRMS", "BRPT", "BSDE", "BTPS", "BUMI", "CMRY", "CPIN", "CTRA", "DSNG", "DSSA",
-    "ELSA", "ENRG", "ERAA", "ESSA", "EXCL", "HEAL", "HRUM", "ICBP", "INCO", "INDF",
-    "INDY", "INKP", "INTP", "ISAT", "ITMG", "JPFA", "JSMR", "KIJA", "KLBF", "KPIG",
-    "LSIP", "MAPA", "MAPI", "MARK", "MBMA", "MDKA", "MEDC", "MIKA", "MTEL", "MYOR",
-    "NCKL", "PANI", "PGAS", "PGEO", "PTBA", "PTPP", "PWON", "RATU", "SIDO", "SMGR",
-    "SMRA", "SRTG", "SSIA", "TAPG", "TCPI", "TKIM", "TLKM", "TPIA", "UNTR", "UNVR"
+    'AADI', 'ACES', 'ADHI', 'ADMR', 'ADRO', 'AKRA', 'ANTM', 'ASII', 'AVIA', 
+    'BKSL', 'BRIS', 'BRMS', 'BRPT', 'BSDE', 'BTPS', 'BUMI', 'CMRY', 'CPIN', 
+    'CTRA', 'DSNG', 'DSSA', 'ELSA', 'ENRG', 'ERAA', 'ESSA', 'EXCL', 'HEAL', 
+    'HRUM', 'ICBP', 'INCO', 'INDF', 'INDY', 'INKP', 'INTP', 'IPCC', 'ISAT', 
+    'ITMG', 'JKON', 'JPFA', 'JRPT', 'JSMR', 'KIJA', 'KLBF', 'KPIG', 'LSIP', 
+    'MAPA', 'MAPI', 'MARK', 'MBMA', 'MDKA', 'MEDC', 'MIKA', 'MTEL', 'MYOR', 
+    'NCKL', 'PANI', 'PGAS', 'PGEO', 'PTBA', 'PTPP', 'PWON', 'RATU', 'SIDO', 
+    'SMBR', 'SMGR', 'SMRA', 'SRTG', 'SSIA', 'TAPG', 'TCPI', 'TKIM', 'TLKM', 
+    'TPIA', 'UNTR', 'UNVR', 'WTON'
 ]
 
 if btn_scan:
