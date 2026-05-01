@@ -72,11 +72,16 @@ def jalankan_scanner_final(tickers, tgl, jam):
                     tp1 = round_bei(lo + (range_fibo * 1.272))
                     tp2 = round_bei(lo + (range_fibo * 1.618))
 
-                    if last_c >= s1: pos = "> S1"
-                    elif last_c >= s2: pos = "> S2"
-                    elif last_c >= s3: pos = "> S3"
-                    elif last_c >= s4: pos = "> S4"
-                    elif last_c >= cl: pos = "> CL"
+                    if last_c > s1: pos = "> S1"
+                    elif last_c > s2: pos = "> S2"
+                    elif last_c > s3: pos = "> S3"
+                    elif last_c > s4: pos = "> S4"
+                    elif last_c > cl: pos = "> CL"
+                    elif last_c = s1: pos = "= S1"
+                    elif last_c = s2: pos = "= S2"
+                    elif last_c = s3: pos = "= S3"
+                    elif last_c = s4: pos = "= S4"
+                    elif last_c = cl: pos = "= CL"
                     else: pos = "< CL"
 
                     results.append({
