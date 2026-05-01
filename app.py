@@ -92,9 +92,9 @@ def jalankan_scanner_final(tickers, tgl, jam):
                         "S3": s3, 
                         "S4": s4, 
                         "CL": cl,
-                        "T24%": round_bei(target_val),
                         "TP1": tp1,
                         "TP2": tp2,
+                        "Target 24%": round_bei(target_val),
                         "Sort_Val": gain_h_pct
                     })
                     
