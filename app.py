@@ -110,8 +110,8 @@ def jalankan_scanner_final(tickers, tgl, jam):
     return df
 
 # --- ANTARMUKA PENGGUNA (UI) ---
-st.title("🚀 Scanner Saham (Up Rounding)")
-st.write("Mencari saham dengan lonjakan harga signifikan. Semua pembulatan harga menggunakan pembulatan ke atas.")
+st.title("🚀 Scanner Saham Naik")
+st.write("Mencari saham dengan lonjakan harga signifikan diatas 24% kurang dari 1 bulan.")
 
 with st.sidebar:
     st.header("Parameter Scan")
