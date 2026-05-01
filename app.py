@@ -57,8 +57,8 @@ def jalankan_scanner_final(tickers, tgl, jam):
                 gain_c_pct = ((last_c - lo) / lo) * 100
                 gain_h_pct = ((last_h - lo) / lo) * 100
 
-                # FILTER: di atas 23.9%
-                if gain_h_pct > 23.9:
+                # FILTER: di atas 23.5%
+                if gain_h_pct > 23.5:
                     target_val = lo * 1.24
                     range_fibo = target_val - lo
 
