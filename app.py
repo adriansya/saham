@@ -23,55 +23,69 @@ def jalankan_scanner(tickers, tgl, jam):
     results = []
     tgl_str = tgl.strftime("%Y-%m-%d")
     tgl_besok = (tgl + timedelta(days=1)).strftime("%Y-%m-%d")
-    jam_utc = f"{int(jam.split(':')[0]) - 7:02d}:{jam.split(':')[1]}"
-
+    
+    # Kita ambil data 1 hari penuh untuk tgl tersebut
+    # agar tidak pusing dengan konversi manual UTC di server
     progress_bar = st.progress(0)
     total = len(tickers)
 
     for i, ticker in enumerate(tickers):
         try:
             symbol = ticker + ".JK"
+            # Ambil data intraday 5 menit
             df_5m = yf.download(symbol, start=tgl_str, end=tgl_besok, interval="5m", progress=False)
+            # Ambil data daily untuk High/Close terakhir
             df_day = yf.Ticker(symbol).history(period="1d")
 
             if not df_5m.empty and not df_day.empty:
-                match = df_5m[df_5m.index.strftime('%H:%M') == jam_utc]
-                if not match.empty:
-                    lo = float(match['Low'].iloc[0])
-                    last_c = float(df_day['Close'].iloc[-1])
-                    last_h = float(df_day['High'].iloc[-1])
+                # Menghapus informasi timezone agar pencarian jam lebih mudah
+                df_5m.index = df_5m.index.tz_localize(None)
+                
+                # Mencari baris yang mengandung jam yang diinput (misal 15:20)
+                # Kita cari jamnya saja tanpa peduli tanggal di index-nya
+                match = df_5m[df_5m.index.strftime('%H:%M') == jam]
+                
+                # Jika tidak ketemu tepat di 15:20, ambil candle terakhir di hari itu
+                if match.empty:
+                    match = df_5m.tail(1)
+
+                lo = float(match['Low'].iloc[0])
+                last_c = float(df_day['Close'].iloc[-1])
+                last_h = float(df_day['High'].iloc[-1])
+                
+                gain_c_pct = ((last_c - lo) / lo) * 100
+                gain_h_pct = ((last_h - lo) / lo) * 100
+
+                # Gunakan kriteria yang sama dengan Colab Anda (21.26%)
+                if gain_h_pct > 21.26:
+                    target_val = lo * 1.24
+                    range_fibo = target_val - lo
                     
-                    gain_c_pct = ((last_c - lo) / lo) * 100
-                    gain_h_pct = ((last_h - lo) / lo) * 100
+                    s1 = round_bei(lo + (range_fibo * 0.886))
+                    s2 = round_bei(lo + (range_fibo * 0.786))
+                    s3 = round_bei(lo + (range_fibo * 0.618))
+                    s4 = round_bei(lo + (range_fibo * 0.500))
+                    cl = round_bei(lo + (range_fibo * 0.382))
+                    tp1 = round_bei(lo + (range_fibo * 1.272))
+                    tp2 = round_bei(lo + (range_fibo * 1.618))
+                    
+                    if last_c >= s1: pos = "> S1"
+                    elif last_c >= s2: pos = "> S2"
+                    elif last_c >= s3: pos = "> S3"
+                    elif last_c >= s4: pos = "> S4"
+                    elif last_c >= cl: pos = "> CL"
+                    else: pos = "< CL"
 
-                    if gain_h_pct > 21.26:
-                        target_val = lo * 1.24
-                        range_fibo = target_val - lo
-                        
-                        s1 = round_bei(lo + (range_fibo * 0.886))
-                        s2 = round_bei(lo + (range_fibo * 0.786))
-                        s3 = round_bei(lo + (range_fibo * 0.618))
-                        s4 = round_bei(lo + (range_fibo * 0.500))
-                        cl = round_bei(lo + (range_fibo * 0.382))
-                        tp1 = round_bei(lo + (range_fibo * 1.272))
-                        tp2 = round_bei(lo + (range_fibo * 1.618))
-                        
-                        if last_c >= s1: pos = "> S1"
-                        elif last_c >= s2: pos = "> S2"
-                        elif last_c >= s3: pos = "> S3"
-                        elif last_c >= s4: pos = "> S4"
-                        elif last_c >= cl: pos = "> CL"
-                        else: pos = "< CL"
-
-                        results.append({
-                            "Ticker": ticker, "Low": int(lo), "Last H": int(last_h),
-                            "% Last H": f"{gain_h_pct:.2f}%", "Last C": int(last_c), 
-                            "% Last C": f"{gain_c_pct:.2f}%", "Pos": pos,
-                            "S1": s1, "S2": s2, "S3": s3, "S4": s4, "CL": cl,
-                            "Target": round_bei(target_val), "TP1": tp1, "TP2": tp2,
-                            "sort": gain_h_pct
-                        })
-        except: continue
+                    results.append({
+                        "Ticker": ticker, "Low": int(lo), "Last H": int(last_h),
+                        "% Last H": f"{gain_h_pct:.2f}%", "Last C": int(last_c), 
+                        "% Last C": f"{gain_c_pct:.2f}%", "Pos": pos,
+                        "S1": s1, "S2": s2, "S3": s3, "S4": s4, "CL": cl,
+                        "Target": round_bei(target_val), "TP1": tp1, "TP2": tp2,
+                        "sort": gain_h_pct
+                    })
+        except Exception as e:
+            continue
         progress_bar.progress((i + 1) / total)
     
     return pd.DataFrame(results)
