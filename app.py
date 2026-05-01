@@ -111,7 +111,7 @@ def jalankan_scanner_final(tickers, tgl, jam):
 
 # --- ANTARMUKA PENGGUNA (UI) ---
 st.title("🚀 Scanner Saham")
-st.write("Mencari saham dengan lonjakan harga signifikan. Sudah naik 24% sejak tanggal 15 bulan.")
+st.write("Mencari saham dengan lonjakan harga signifikan. Sudah naik 24% sejak tanggal 15.")
 
 with st.sidebar:
     st.header("Parameter Scan")
