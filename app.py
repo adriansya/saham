@@ -8,7 +8,7 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # --- KONFIGURASI HALAMAN ---
-st.set_page_config(page_title="Scanner Saham", layout="wide")
+st.set_page_config(page_title="Scanner Saham Cap > 1T", layout="wide")
 
 def round_bei(price):
     """Fungsi pembulatan ke ATAS sesuai fraksi harga BEI."""
@@ -18,7 +18,6 @@ def round_bei(price):
     elif price < 2000: f = 5
     elif price < 5000: f = 10
     else: f = 25
-    # Menggunakan math.ceil untuk pembulatan ke atas
     return int(math.ceil(price / f) * f)
 
 def jalankan_scanner_final(tickers, tgl, jam):
@@ -28,7 +27,7 @@ def jalankan_scanner_final(tickers, tgl, jam):
     tgl_dt = datetime.strptime(tgl_str, "%Y-%m-%d")
     tgl_besok = (tgl_dt + timedelta(days=1)).strftime("%Y-%m-%d")
     
-    # Logika Konversi WIB ke UTC (-7) sesuai Colab
+    # Logika Konversi WIB ke UTC (-7)
     jam_utc = f"{int(jam.split(':')[0]) - 7:02d}:{jam.split(':')[1]}"
     
     progress_bar = st.progress(0)
@@ -37,16 +36,25 @@ def jalankan_scanner_final(tickers, tgl, jam):
     for i, ticker in enumerate(tickers):
         try:
             symbol = ticker + ".JK"
-            status_text.text(f"Memeriksa {symbol}...")
+            status_text.text(f"Memeriksa {symbol} (Market Cap & Price)...")
             
+            t_obj = yf.Ticker(symbol)
+            
+            # --- KRITERIA MARKET CAP > 1 TRILIUN ---
+            info = t_obj.info
+            mkt_cap = info.get('marketCap', 0)
+            
+            if mkt_cap < 1_000_000_000_000: # Skip jika di bawah 1 Triliun
+                progress_bar.progress((i + 1) / len(tickers))
+                continue
+
             df_5m = yf.download(symbol, start=tgl_str, end=tgl_besok, interval="5m", progress=False)
-            df_day = yf.Ticker(symbol).history(period="1d")
+            df_day = t_obj.history(period="1d")
             
             if isinstance(df_5m.columns, pd.MultiIndex):
                 df_5m.columns = df_5m.columns.get_level_values(0)
 
             if not df_5m.empty and not df_day.empty:
-                # Cari jam berdasarkan format string UTC
                 match = df_5m[df_5m.index.strftime('%H:%M') == jam_utc]
                 if match.empty: continue
 
@@ -62,7 +70,6 @@ def jalankan_scanner_final(tickers, tgl, jam):
                     target_val = lo * 1.24
                     range_fibo = target_val - lo
 
-                    # Perhitungan level dengan pembulatan ke atas
                     s1 = round_bei(lo + (range_fibo * 0.886))
                     s2 = round_bei(lo + (range_fibo * 0.786))
                     s3 = round_bei(lo + (range_fibo * 0.618))
@@ -81,6 +88,7 @@ def jalankan_scanner_final(tickers, tgl, jam):
 
                     results.append({
                         "Ticker": ticker,
+                        "Market Cap (T)": round(mkt_cap / 1_000_000_000_000, 2),
                         "Low": int(lo),
                         "Last H %": f"{gain_h_pct:.2f}%",
                         "Last H": int(last_h),
@@ -110,8 +118,8 @@ def jalankan_scanner_final(tickers, tgl, jam):
     return df
 
 # --- ANTARMUKA PENGGUNA (UI) ---
-st.title("🚀 Scanner Saham")
-st.write("Mencari saham dengan lonjakan harga signifikan. Sudah naik 24% sejak tanggal 15.")
+st.title("🚀 Scanner Saham Syariah (ISSI)")
+st.subheader("Filter: Market Cap > Rp 1 Triliun & Gain H > 21.26%")
 
 with st.sidebar:
     st.header("Parameter Scan")
@@ -120,7 +128,7 @@ with st.sidebar:
     btn_scan = st.button("Mulai Scan")
 
 stock_ticker = [
-   'AADI', 'AALI', 'ABMM', 'ACES', 'ACST', 'ADCP', 'ADES', 'ADHI', 'ADMG', 'ADMR', 
+    'AADI', 'AALI', 'ABMM', 'ACES', 'ACST', 'ADCP', 'ADES', 'ADHI', 'ADMG', 'ADMR', 
     'ADRO', 'AGAR', 'AGII', 'AIMS', 'AISA', 'AKKU', 'AKPI', 'AKRA', 'AKSI', 'ALDO', 
     'ALKA', 'AMAN', 'AMFG', 'AMIN', 'ANDI', 'ANJT', 'ANTM', 'APII', 'APLI', 'APLN', 
     'ARCI', 'AREA', 'ARGO', 'ARII', 'ARNA', 'ARTA', 'ASGR', 'ASHA', 'ASII', 'ASLC', 
@@ -190,7 +198,20 @@ if btn_scan:
     df_hasil = jalankan_scanner_final(stock_ticker, tgl_input, jam_input)
     
     if not df_hasil.empty:
-        st.success(f"Ditemukan {len(df_hasil)} saham!")
+        st.success(f"Ditemukan {len(df_hasil)} saham yang memenuhi kriteria!")
+        
+        # Tabel Utama
         st.dataframe(df_hasil, use_container_width=True)
+        
+        # Ringkasan di bagian bawah
+        st.divider()
+        st.write("### 📋 Daftar Nama Saham Terdeteksi:")
+        
+        # Menampilkan dalam bentuk kolom agar rapi
+        cols = st.columns(5)
+        tickers_found = df_hasil['Ticker'].tolist()
+        for idx, t in enumerate(tickers_found):
+            cols[idx % 5].info(f"**{t}**")
+            
     else:
-        st.warning("Tidak ada saham yang memenuhi kriteria % Last H > 21.26%")
+        st.warning("Tidak ada saham yang memenuhi kriteria Market Cap > 1T dan % Last H > 21.26%")
