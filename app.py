@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 import math
 import warnings
+import os
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
@@ -18,17 +19,27 @@ def round_bei(price):
     elif price < 2000: f = 5
     elif price < 5000: f = 10
     else: f = 25
-    # Menggunakan math.ceil untuk pembulatan ke atas
     return int(math.ceil(price / f) * f)
 
-def jalankan_scanner_final(tickers, tgl, jam):
+def load_tickers(file_path="tickers.txt"):
+    """Mengambil daftar ticker dari file eksternal."""
+    if os.path.exists(file_path):
+        with open(file_path, "r") as f:
+            lines = f.readlines()
+            return [line.strip().upper() for line in lines if line.strip()]
+    else:
+        st.error(f"File {file_path} tidak ditemukan!")
+        return []
+
+def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
     results = []
     
-    tgl_str = tgl.strftime("%Y-%m-%d")
-    tgl_dt = datetime.strptime(tgl_str, "%Y-%m-%d")
-    tgl_besok = (tgl_dt + timedelta(days=1)).strftime("%Y-%m-%d")
+    # Format tanggal untuk yfinance
+    tgl_start = tgl_acuan.strftime("%Y-%m-%d")
+    # End date harus +1 hari dari target agar data hari target terbawa
+    tgl_end = (tgl_target + timedelta(days=1)).strftime("%Y-%m-%d")
     
-    # Logika Konversi WIB ke UTC (-7) sesuai Colab
+    # Logika Konversi WIB ke UTC (-7)
     jam_utc = f"{int(jam.split(':')[0]) - 7:02d}:{jam.split(':')[1]}"
     
     progress_bar = st.progress(0)
@@ -39,20 +50,26 @@ def jalankan_scanner_final(tickers, tgl, jam):
             symbol = ticker + ".JK"
             status_text.text(f"Memeriksa {ticker} ...")
             
-            df_5m = yf.download(symbol, start=tgl_str, end=tgl_besok, interval="5m", progress=False)
-            df_day = yf.Ticker(symbol).history(period="1d")
+            # Ambil data interval 5m untuk mencari Low di jam acuan
+            df_5m = yf.download(symbol, start=tgl_start, end=(tgl_acuan + timedelta(days=1)).strftime("%Y-%m-%d"), interval="5m", progress=False)
+            
+            # Ambil data harian sampai tanggal target
+            ticker_obj = yf.Ticker(symbol)
+            df_day = ticker_obj.history(start=tgl_start, end=tgl_end)
             
             if isinstance(df_5m.columns, pd.MultiIndex):
                 df_5m.columns = df_5m.columns.get_level_values(0)
 
             if not df_5m.empty and not df_day.empty:
-                # Cari jam berdasarkan format string UTC
+                # Cari Low pada jam acuan
                 match = df_5m[df_5m.index.strftime('%H:%M') == jam_utc]
                 if match.empty: continue
 
                 lo = float(match['Low'].iloc[0])
+                
+                # Gunakan data Close dan High terakhir (di tgl_target)
                 last_c = float(df_day['Close'].iloc[-1])
-                last_h = float(df_day['High'].iloc[-1])
+                last_h = float(df_day['High'].max()) # High tertinggi sejak tgl acuan
 
                 gain_c_pct = ((last_c - lo) / lo) * 100
                 gain_h_pct = ((last_h - lo) / lo) * 100
@@ -62,7 +79,6 @@ def jalankan_scanner_final(tickers, tgl, jam):
                     target_val = lo * 1.24
                     range_fibo = target_val - lo
 
-                    # Perhitungan level dengan pembulatan ke atas
                     s1 = round_bei(lo + (range_fibo * 0.886))
                     s2 = round_bei(lo + (range_fibo * 0.786))
                     s3 = round_bei(lo + (range_fibo * 0.618))
@@ -81,19 +97,14 @@ def jalankan_scanner_final(tickers, tgl, jam):
 
                     results.append({
                         "Ticker": ticker,
-                        "Low": int(lo),
-                        "Last High %": f"{gain_h_pct:.2f}%",
-                        "Last High": int(last_h),
+                        "Low Acuan": int(lo),
+                        "Max High %": f"{gain_h_pct:.2f}%",
+                        "Max High": int(last_h),
                         "Last Close %": f"{gain_c_pct:.2f}%",
                         "Last Close": int(last_c),
                         "Position": pos,
-                        "S1": s1, 
-                        "S2": s2, 
-                        "S3": s3, 
-                        "S4": s4, 
-                        "CL": cl,
-                        "TP1": tp1,
-                        "TP2": tp2,
+                        "S1": s1, "S2": s2, "S3": s3, "S4": s4, "CL": cl,
+                        "TP1": tp1, "TP2": tp2,
                         "Target 24%": round_bei(target_val),
                         "Sort_Val": gain_h_pct
                     })
@@ -104,14 +115,23 @@ def jalankan_scanner_final(tickers, tgl, jam):
         progress_bar.progress((i + 1) / len(tickers))
         
     status_text.text("Scan selesai!")
-    
     df = pd.DataFrame(results)
     if not df.empty:
         df = df.sort_values(by="Sort_Val", ascending=False).drop(columns=["Sort_Val"])
         df = df.reset_index(drop=True)
         df.index = df.index + 1 
-        
     return df
+
+# --- LOGIKA TANGGAL OTOMATIS ---
+today = datetime.now()
+if today.day >= 15:
+    # Jika hari ini tgl 15 ke atas, default = tgl 15 bulan ini
+    default_acuan = datetime(today.year, today.month, 15)
+else:
+    # Jika hari ini sebelum tgl 15, default = tgl 15 bulan lalu
+    first_day_this_month = today.replace(day=1)
+    last_day_last_month = first_day_this_month - timedelta(days=1)
+    default_acuan = datetime(last_day_last_month.year, last_day_last_month.month, 15)
 
 # --- ANTARMUKA PENGGUNA (UI) ---
 st.title("Scanner Saham Naik 🚀")
@@ -121,29 +141,22 @@ st.write("✅ Perhitungan Support (S), Cut Loss (CL), dan Taking Profit (TP) den
 
 with st.sidebar:
     st.header("Parameter Scan")
-    tgl_input = st.date_input("Tanggal Acuan Low", datetime(2026, 4, 15).date())
-    # jam_input = st.text_input("Jam Acuan (WIB)", "15:20")
+    tgl_acuan = st.date_input("Tanggal Acuan Low", default_acuan)
+    tgl_target = st.date_input("Tanggal Target (Data Terakhir)", today)
     jam_input = "15:20"
     btn_scan = st.button("Mulai Scan")
 
-# Master List Saham Syariah Pilihan (Gabungan JII70, Kompas100, IDX-MES-BUMN, & IDXSHAGROW)
-stock_ticker = [
-    'AADI', 'ACES', 'ADHI', 'ADMR', 'ADRO', 'AKRA', 'ANTM', 'ARCI', 'ASII', 'AVIA', 
-    'BKSL', 'BRIS', 'BRMS', 'BRPT', 'BSDE', 'BTPS', 'BULL', 'BUMI', 'BUVA', 'CBDK', 
-    'CMRY', 'CPIN', 'CTRA', 'DSNG', 'DSSA', 'ELSA', 'ENRG', 'ERAA', 'ESSA', 'EXCL', 
-    'FILM', 'HEAL', 'HRUM', 'ICBP', 'IMPC', 'INCO', 'INDF', 'INDY', 'INET', 'INKP', 
-    'INTP', 'IPCC', 'ISAT', 'ITMG', 'JKON', 'JPFA', 'JRPT', 'JSMR', 'KIJA', 'KLBF', 
-    'KPIG', 'LSIP', 'MAPA', 'MAPI', 'MARK', 'MBMA', 'MDKA', 'MEDC', 'MIKA', 'MTEL', 
-    'MYOR', 'NCKL', 'PANI', 'PGAS', 'PGEO', 'PSAB', 'PTBA', 'PTPP', 'PWON', 'RAJA', 
-    'RATU', 'SGER', 'SIDO', 'SMBR', 'SMGR', 'SMRA', 'SRTG', 'SSIA', 'TAPG', 'TCPI', 
-    'TKIM', 'TLKM', 'TOBA', 'TPIA', 'UNTR', 'UNVR', 'VKTR', 'WIRG', 'WTON'
-]
+# Load list saham dari file eksternal
+stock_ticker = load_tickers("tickers.txt")
 
 if btn_scan:
-    df_hasil = jalankan_scanner_final(stock_ticker, tgl_input, jam_input)
-    
-    if not df_hasil.empty:
-        st.success(f"Ditemukan {len(df_hasil)} saham!")
-        st.dataframe(df_hasil, use_container_width=True)
+    if not stock_ticker:
+        st.error("Daftar saham kosong. Periksa file tickers.txt")
     else:
-        st.warning("Tidak ada saham yang memenuhi kriteria % Last H > 21.26%")
+        df_hasil = jalankan_scanner_final(stock_ticker, tgl_acuan, tgl_target, jam_input)
+        
+        if not df_hasil.empty:
+            st.success(f"Ditemukan {len(df_hasil)} saham!")
+            st.dataframe(df_hasil, use_container_width=True)
+        else:
+            st.warning("Tidak ada saham yang memenuhi kriteria.")
