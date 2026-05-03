@@ -22,7 +22,7 @@ def round_bei(price, direction="up"):
     
     if direction == "up":
         return int(math.ceil(price / f) * f)
-    else: # untuk hitung tick bawah
+    else:
         return int(math.floor(price / f) * f)
 
 def get_tick_down(price, ticks=3):
@@ -50,6 +50,8 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
     results = []
     tgl_start = tgl_acuan.strftime("%Y-%m-%d")
     tgl_end = (tgl_target + timedelta(days=1)).strftime("%Y-%m-%d")
+    
+    # Konversi WIB ke UTC (-7)
     jam_utc = f"{int(jam.split(':')[0]) - 7:02d}:{jam.split(':')[1]}"
     
     progress_bar = st.progress(0)
@@ -86,16 +88,16 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                 if gain_h_pct > 23.5:
                     range_fibo = target_val - lo
 
-                    # REVISI PARAMETER
+                    # Perhitungan Level
                     s1 = round_bei(lo + (range_fibo * 0.886))
                     s2 = round_bei(lo + (range_fibo * 0.786))
                     s3 = round_bei(lo + (range_fibo * 0.618))
-                    s4 = round_bei(lo + (range_fibo * 0.382)) # Revisi S4 = 0.382
-                    cl = get_tick_down(s4, ticks=3)          # Revisi CL = 3 tick di bawah S4
+                    s4 = round_bei(lo + (range_fibo * 0.382))
+                    cl = get_tick_down(s4, ticks=3)
                     
-                    tp1 = round_bei(lo + (range_fibo * 1.128)) # Revisi TP1 = 1.128
-                    tp2 = round_bei(lo + (range_fibo * 1.272)) # Revisi TP2 = 1.272
-                    tp3 = round_bei(lo + (range_fibo * 1.414)) # Tambah TP3 = 1.414
+                    tp1 = round_bei(lo + (range_fibo * 1.128))
+                    tp2 = round_bei(lo + (range_fibo * 1.272))
+                    tp3 = round_bei(lo + (range_fibo * 1.414))
 
                     if last_c > s1: pos = "> S1"
                     elif last_c > s2: pos = "> S2"
@@ -144,7 +146,7 @@ else:
 # --- ANTARMUKA PENGGUNA (UI) ---
 st.title("Scanner Saham Naik 🚀")
 st.write("✅ Mencari saham syariah dengan lonjakan harga signifikan diatas 24% kurang dari 1 bulan. Kriteria saham syariah adalah masuk dalam gabungan Indeks JII70, KOMPAS100, IDX-MES-BUMN, & IDX-SHA-GROW.")
-st.write("✅ Perhitungan Support (S), Cut Loss (CL), dan Taking Profit (TP) dengan Fibonacci.")
+st.write("✅ Perhitungan Support (S), Cut Loss (CL), dan Taking Profit (TP) dengan Fibonacci.\n Support terkuat pada area Golden Ratio S3 (0.618) dan S4 (0.382)")
 
 with st.sidebar:
     st.header("Parameter Scan")
@@ -164,31 +166,24 @@ if btn_scan:
             st.success(f"Ditemukan {len(df_hasil)} saham!")
             st.dataframe(df_hasil, use_container_width=True)
 
-                    # --- TAMBAHAN TRADING PLAN DI BAWAH TABEL ---
-        st.divider()
-        st.subheader("📝 Trading Plan")
-        
-        for index, row in df_hasil.iterrows():
-            # 1. Hitung Harga Average (Piramida 10-20-30-40)
-            avg_price = (row['S1'] * 0.1) + (row['S2'] * 0.2) + (row['S3'] * 0.3) + (row['S4'] * 0.4)
+            # --- TRADING PLAN ---
+            st.divider()
+            st.subheader("📝 Trading Plan")
             
-            # 2. Risk % dihitung dari Harga Avg ke CL
-            risk_avg_pct = ((row['CL'] - avg_price) / avg_price) * 100
-            
-            # 3. Profit % tetap dihitung dari S1 ke TP (asumsi target konservatif)
-            tp1_pct = ((row['TP1'] - row['S1']) / row['S1']) * 100
-            tp2_pct = ((row['TP2'] - row['S1']) / row['S1']) * 100
-            tp3_pct = ((row['TP3'] - row['S1']) / row['S1']) * 100
-            
-            # Tampilan Plan
-            st.markdown(f"### **{row['Ticker']}**")
-            st.write(f"**Buy (Piramida):** S1: 10%, S2: 20%, S3: 30%, S4: 40%")
-            st.write(f"**Price :** {row['S1']}-{row['S2']}, {row['S3']}, {row['S4']}")
-            st.write(f"**Avg Price :** {int(avg_price)}")
-            st.write(f"**CL :** {row['CL']} ({risk_avg_pct:.2f}% dari Avg)")
-            st.write(f"**TP :** {row['TP1']} (+{tp1_pct:.2f}%), {row['TP2']} (+{tp2_pct:.2f}%), {row['TP3']} (+{tp3_pct:.2f}%)")
-            st.caption("_Catatan: Profit % dihitung dari harga S1 sebagai acuan minimal._")
-            st.write("---")
-
+            for index, row in df_hasil.iterrows():
+                # Hitung Harga Avg (Skema 10-20-30-40)
+                avg_p = (row['S1']*0.1) + (row['S2']*0.2) + (row['S3']*0.3) + (row['S4']*0.4)
+                # Risk dari Avg ke CL
+                risk_pct = ((row['CL'] - avg_p) / avg_p) * 100
+                # Profit dari S1
+                tp1_p = ((row['TP1'] - row['S1']) / row['S1']) * 100
+                tp2_p = ((row['TP2'] - row['S1']) / row['S1']) * 100
+                tp3_p = ((row['TP3'] - row['S1']) / row['S1']) * 100
+                
+                st.markdown(f"### **{row['Ticker']}**")
+                st.write(f"**Buy :** {row['S1']}-{row['S2']}, {row['S3']}, {row['S4']}")
+                st.write(f"**CL :** {row['CL']} ({risk_pct:.2f}% risk dari avg)")
+                st.write(f"**TP :** {row['TP1']} ({tp1_p:.2f}% profit), {row['TP2']} ({tp2_p:.2f}% profit), {row['TP3']} ({tp3_p:.2f}% profit)")
+                st.write("---")
         else:
             st.warning("Tidak ada saham yang memenuhi kriteria.")
