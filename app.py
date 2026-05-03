@@ -164,24 +164,31 @@ if btn_scan:
             st.success(f"Ditemukan {len(df_hasil)} saham!")
             st.dataframe(df_hasil, use_container_width=True)
 
-            # --- BAGIAN BARU DIMULAI DISINI ---
-            st.divider()
-            st.subheader("📝 Trading Plan (Estimasi Entry via S1)")
+                    # --- TAMBAHAN TRADING PLAN DI BAWAH TABEL ---
+        st.divider()
+        st.subheader("📝 Trading Plan")
+        
+        for index, row in df_hasil.iterrows():
+            # 1. Hitung Harga Average (Piramida 10-20-30-40)
+            avg_price = (row['S1'] * 0.1) + (row['S2'] * 0.2) + (row['S3'] * 0.3) + (row['S4'] * 0.4)
             
-            for _, row in df_hasil.iterrows():
-                # Kalkulasi persentase
-                risk_pct = ((row['CL'] - row['S4']) / row['S4']) * 100
-                tp1_p = ((row['TP1'] - row['S1']) / row['S1']) * 100
-                tp2_p = ((row['TP2'] - row['S1']) / row['S1']) * 100
-                tp3_p = ((row['TP3'] - row['S1']) / row['S1']) * 100
-                
-                # Menampilkan dalam format teks yang rapi
-                st.info(f"**{row['Ticker']}**")
-                st.write(f"**Buy :** {row['S1']}-{row['S2']}, {row['S3']}, {row['S4']}")
-                st.write(f"**CL :** {row['CL']} ({risk_pct:.2f}%)")
-                st.write(f"**TP :** {row['TP1']} ({tp1_p:.2f}%), {row['TP2']} ({tp2_p:.2f}%), {row['TP3']} ({tp3_p:.2f}%)")
-                st.write("---")
-            # --- BAGIAN BARU SELESAI ---
+            # 2. Risk % dihitung dari Harga Avg ke CL
+            risk_avg_pct = ((row['CL'] - avg_price) / avg_price) * 100
+            
+            # 3. Profit % tetap dihitung dari S1 ke TP (asumsi target konservatif)
+            tp1_pct = ((row['TP1'] - row['S1']) / row['S1']) * 100
+            tp2_pct = ((row['TP2'] - row['S1']) / row['S1']) * 100
+            tp3_pct = ((row['TP3'] - row['S1']) / row['S1']) * 100
+            
+            # Tampilan Plan
+            st.markdown(f"### **{row['Ticker']}**")
+            st.write(f"**Buy (Piramida):** S1: 10%, S2: 20%, S3: 30%, S4: 40%")
+            st.write(f"**Price :** {row['S1']}-{row['S2']}, {row['S3']}, {row['S4']}")
+            st.write(f"**Avg Price :** {int(avg_price)}")
+            st.write(f"**CL :** {row['CL']} ({risk_avg_pct:.2f}% dari Avg)")
+            st.write(f"**TP :** {row['TP1']} (+{tp1_pct:.2f}%), {row['TP2']} (+{tp2_pct:.2f}%), {row['TP3']} (+{tp3_pct:.2f}%)")
+            st.caption("_Catatan: Profit % dihitung dari harga S1 sebagai acuan minimal._")
+            st.write("---")
 
         else:
             st.warning("Tidak ada saham yang memenuhi kriteria.")
