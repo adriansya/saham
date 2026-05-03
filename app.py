@@ -102,7 +102,7 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                     elif last_c > s3: pos = "> S3"
                     elif last_c > s4: pos = "> S4"
                     elif last_c > cl: pos = "> CL"
-                        else: pos = "< CL"
+                    else: pos = "< CL"
 
                     results.append({
                         "Ticker": ticker,
