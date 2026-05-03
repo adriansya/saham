@@ -51,7 +51,7 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
             # 1. Ambil data 5m untuk mencari Low di Jam Acuan
             df_5m = yf.download(symbol, start=tgl_start, end=(tgl_acuan + timedelta(days=1)).strftime("%Y-%m-%d"), interval="5m", progress=False)
             
-            # 2. Ambil data harian untuk mencari High Tertinggi & Close Terakhir
+            # 2. Ambil data harian untuk rentang waktu scan
             ticker_obj = yf.Ticker(symbol)
             df_day = ticker_obj.history(start=tgl_start, end=tgl_end)
             
@@ -64,20 +64,24 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                 if match.empty: continue
 
                 lo = float(match['Low'].iloc[0])
+                target_val = lo * 1.24 # Definisi Target 24%
                 
-                # Cari High Tertinggi dalam rentang tgl_acuan s/d tgl_target
+                # Cari High Tertinggi & Tanggal Target Tercapai
                 max_high_val = float(df_day['High'].max())
-                # Cari tanggal saat High Tertinggi tersebut tercapai
-                tgl_high_max = df_day['High'].idxmax().strftime("%d-%m-%Y")
-                
-                last_c = float(df_day['Close'].iloc[-1])
-
-                gain_c_pct = ((last_c - lo) / lo) * 100
                 gain_h_pct = ((max_high_val - lo) / lo) * 100
+                
+                # Cari tanggal pertama kali High menyentuh atau melewati target 24%
+                df_target_hit = df_day[df_day['High'] >= target_val]
+                if not df_target_hit.empty:
+                    tgl_target_hit = df_target_hit.index[0].strftime("%d-%m-%Y")
+                else:
+                    tgl_target_hit = "-" # Jika filter diturunkan di bawah 24%
 
-                # FILTER: di atas 23.5% (seperti logika sebelumnya)
+                last_c = float(df_day['Close'].iloc[-1])
+                gain_c_pct = ((last_c - lo) / lo) * 100
+
+                # FILTER: Hanya tampilkan yang pernah naik di atas 23.5%
                 if gain_h_pct > 23.5:
-                    target_val = lo * 1.24
                     range_fibo = target_val - lo
 
                     s1 = round_bei(lo + (range_fibo * 0.886))
@@ -101,7 +105,7 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                         "Low Acuan": int(lo),
                         "Max High %": f"{gain_h_pct:.2f}%",
                         "Max High": int(max_high_val),
-                        "Tgl Max High": tgl_high_max, # Kolom baru
+                        "Tgl Target 24%": tgl_target_hit, # Kolom baru pengganti Tgl Max High
                         "Last Close %": f"{gain_c_pct:.2f}%",
                         "Last Close": int(last_c),
                         "Position": pos,
@@ -135,8 +139,7 @@ else:
 
 # --- ANTARMUKA PENGGUNA (UI) ---
 st.title("Scanner Saham Naik 🚀")
-st.write("✅ Mencari saham dengan lonjakan harga signifikan diatas 24% kurang dari 1 bulan.")
-st.write("✅ List screening adalah saham syariah yang masuk dalam Gabungan Indeks JII70, KOMPAS100, IDX-MES-BUMN, & IDX-SHA-GROW.")
+st.write("✅ Mencari saham syariah dengan lonjakan harga signifikan diatas 24% kurang dari 1 bulan. Kriteria saham syariah adalah masuk dalam gabungan Indeks JII70, KOMPAS100, IDX-MES-BUMN, & IDX-SHA-GROW.")
 st.write("✅ Perhitungan Support (S), Cut Loss (CL), dan Taking Profit (TP) dengan Fibonacci.\n Support terkuat pada area Golden Ratio S3 (0.618) dan S4 (0.5)")
 
 with st.sidebar:
