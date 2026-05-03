@@ -102,16 +102,16 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
 
                     results.append({
                         "Ticker": ticker,
-                        "Low Acuan": int(lo),
+                        "Low": int(lo),
                         "Max High %": f"{gain_h_pct:.2f}%",
                         "Max High": int(max_high_val),
-                        "Tgl Target 24%": tgl_target_hit, # Kolom baru pengganti Tgl Max High
-                        "Last Close %": f"{gain_c_pct:.2f}%",
-                        "Last Close": int(last_c),
+                        "Close %": f"{gain_c_pct:.2f}%",
+                        "Close": int(last_c),
                         "Position": pos,
                         "S1": s1, "S2": s2, "S3": s3, "S4": s4, "CL": cl,
                         "TP1": tp1, "TP2": tp2,
                         "Target 24%": round_bei(target_val),
+                         "Tgl Target 24%": tgl_target_hit,
                         "Sort_Val": gain_h_pct
                     })
                     
