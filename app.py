@@ -184,7 +184,7 @@ if btn_scan:
                 
                 st.markdown(f"### **{row['Ticker']}**")
                 st.write(f"**Buy :** {row['S1']}-{row['S2']}, {row['S3']}, {row['S4']}")
-                st.write(f"**CL :** {row['CL']} ({risk_pct:.2f}% risk dari avg)")
+                st.write(f"**CL :** {row['CL']} ({risk_pct:.2f}% dari avg)")
                 st.write(f"**TP :** {row['TP1']} ({tp1_p:.2f}%), {row['TP2']} ({tp2_p:.2f}%), {row['TP3']} ({tp3_p:.2f}%)")
                 st.write("---")
         else:
