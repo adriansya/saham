@@ -176,7 +176,7 @@ if btn_scan:
                 # Hitung Harga Avg (Skema 20-35-45)
                 avg_p = (row['S1']*0.2) + (row['S2']*0.35) + (row['S3']*0.45)
                 # Risk dari Avg ke CL
-                risk_pct = ((row['CL'] - avg_p) / avg_p) * 100
+                risk_pct = ((row['SL'] - avg_p) / avg_p) * 100
                 # Profit dari S1
                 tp1_p = ((row['TP1'] - row['S1']) / row['S1']) * 100
                 tp2_p = ((row['TP2'] - row['S1']) / row['S1']) * 100
@@ -184,7 +184,7 @@ if btn_scan:
                 
                 st.markdown(f"### **{row['Ticker']}**")
                 st.write(f"**Buy :** {row['S1']}, {row['S2']}, {row['S3']}")
-                st.write(f"**SL :** {row['CL']} ({risk_pct:.2f}% dari avg)")
+                st.write(f"**SL :** {row['SL']} ({risk_pct:.2f}% dari avg)")
                 st.write(f"**TP :** {row['TP1']} ({tp1_p:.2f}%), {row['TP2']} ({tp2_p:.2f}%), {row['TP3']} ({tp3_p:.2f}%)")
                 st.write("---")
         else:
