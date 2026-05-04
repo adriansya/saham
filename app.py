@@ -116,7 +116,7 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                         "Close %": f"{gain_c_pct:.2f}%",
                         "Close": int(last_c),
                         "Position": pos,
-                        "S1": s1, "S2": s2, "S3": s3, "S4": s4, "CL": cl,
+                        "S1": s1, "S2": s2, "S3": s3, "SL": cl,
                         "TP1": tp1, "TP2": tp2, "TP3": tp3,
                         "Target 24%": round_bei(target_val),
                         "Tgl Target 24%": tgl_target_hit,
@@ -148,7 +148,7 @@ else:
 # --- ANTARMUKA PENGGUNA (UI) ---
 st.title("Scanner Saham Naik 🚀")
 st.write("✅ Mencari saham syariah dengan lonjakan harga signifikan kurang dari 1 bulan. Kriteria saham syariah adalah masuk dalam gabungan Indeks JII70, KOMPAS100, IDX-MES-BUMN, & IDX-SHA-GROW.")
-st.write("✅ Perhitungan Support (S), Cut Loss (CL), dan Taking Profit (TP) dengan Fibonacci.\n Support terkuat pada area Golden Ratio S3 (0.618) dan S4 (0.382)")
+st.write("✅ Perhitungan Support (S), Stop Loss (SL), dan Taking Profit (TP) dengan Fibonacci.\n Support terkuat pada area Golden Ratio S3 (0.618) dan S4 (0.382)")
 
 with st.sidebar:
     st.header("Parameter Scan")
@@ -173,8 +173,8 @@ if btn_scan:
             st.subheader("📝 Trading Plan")
             
             for index, row in df_hasil.iterrows():
-                # Hitung Harga Avg (Skema 10-20-30-40)
-                avg_p = (row['S1']*0.1) + (row['S2']*0.2) + (row['S3']*0.3) + (row['S4']*0.4)
+                # Hitung Harga Avg (Skema 20-35-45)
+                avg_p = (row['S1']*0.2) + (row['S2']*0.35) + (row['S3']*0.45)
                 # Risk dari Avg ke CL
                 risk_pct = ((row['CL'] - avg_p) / avg_p) * 100
                 # Profit dari S1
@@ -183,8 +183,8 @@ if btn_scan:
                 tp3_p = ((row['TP3'] - row['S1']) / row['S1']) * 100
                 
                 st.markdown(f"### **{row['Ticker']}**")
-                st.write(f"**Buy :** {row['S1']}, {row['S2']}, {row['S3']}, {row['S4']}")
-                st.write(f"**CL :** {row['CL']} ({risk_pct:.2f}% dari avg)")
+                st.write(f"**Buy :** {row['S1']}, {row['S2']}, {row['S3']}")
+                st.write(f"**SL :** {row['CL']} ({risk_pct:.2f}% dari avg)")
                 st.write(f"**TP :** {row['TP1']} ({tp1_p:.2f}%), {row['TP2']} ({tp2_p:.2f}%), {row['TP3']} ({tp3_p:.2f}%)")
                 st.write("---")
         else:
