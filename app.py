@@ -185,8 +185,8 @@ if btn_scan:
                         # Hitung Avg Price 20-35-45
                         avg_p = (row['S1']*0.2) + (row['S2']*0.35) + (row['S3']*0.45)
                         risk_pct = ((row['SL'] - avg_p) / avg_p) * 100
-                        tp1_pct = ((row['TP1'] - row['S1']) / row['S1']) * 100
-                        tp2_pct = ((row['TP2'] - row['S1']) / row['S1']) * 100
+                        tp1_pct = ((row['TP1'] - avg_p) / avg_p) * 100
+                        tp2_pct = ((row['TP2'] - avg_p) / avg_p) * 100
                         
                         st.subheader(f"📈 {row['Ticker']}")
                         c1, c2 = st.columns(2)
