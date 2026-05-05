@@ -110,13 +110,13 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                     results.append({
                         "Ticker": ticker,
                         "Low": int(lo),
+                        "Target": target,
                         "Max Gain %": f"{gain_h_pct:.2f}%",
                         "Close %": f"{gain_c_pct:.2f}%",
                         "Close": last_c,
                         "Position": pos,
                         "S1": s1, "S2": s2, "S3": s3, "S4": s4, "SL": sl,
                         "TP1": tp1, "TP2": tp2, "TP3": tp3,
-                        "Price target": target,
                         "Date target": tgl_target_hit,
                         "Sort_Val": gain_c_pct
                     })
@@ -178,6 +178,7 @@ if btn_scan:
                         risk_pct = ((row['SL'] - avg_p) / avg_p) * 100
                         tp1_pct = ((row['TP1'] - avg_p) / avg_p) * 100
                         tp2_pct = ((row['TP2'] - avg_p) / avg_p) * 100
+                        tp3_pct = ((row['TP3'] - avg_p) / avg_p) * 100
                         
                         st.subheader(f"📈 {row['Ticker']}")
                         c1, c2 = st.columns(2)
@@ -185,14 +186,16 @@ if btn_scan:
                             st.success(f"**Buy Zone:**")
                             st.write(f"- S1: **{row['S1']}**")
                             st.write(f"- S2: **{row['S2']}**")
-                            st.write(f"- S3: **{row['S3']}-{row['S4']}**")
+                            st.write(f"- S3: **{row['S3']}**")
+                            st.write(f"- S4: **{row['S4']}**")
                         with c2:
                             st.error(f"**Sell Zone:**")
                             st.write(f"- TP1: **{row['TP1']}**")
                             st.write(f"- TP2: **{row['TP2']}**")
+                            st.write(f"- TP3: **{row['TP3']}**")
                             st.write(f"- SL: **{row['SL']}**")
                         
                         st.warning(f"Estimated Avg Price: **~{int(avg_p)}** | Risk: **{abs(risk_pct):.2f}%**")
-                        st.info(f"Reward TP1: **{tp1_pct:.2f}%** | TP2: **{tp2_pct:.2f}%**")
+                        st.info(f"Reward TP1: **{tp1_pct:.2f}%** | TP2: **{tp2_pct:.2f}%** | TP3: **{tp3_pct:.2f}%**")
         else:
             st.warning("Tidak ada saham yang memenuhi kriteria.")
