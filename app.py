@@ -137,7 +137,7 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
 st.title("Scanner Saham Momentum 🚀")
 st.markdown("""
 * **Strategi:** Momentum dengan Fibonacci Retracement.
-* **Skema Entry:** Bertahap di Support dengan skema Piramida **20% (S1)**, **30% (S2)**, dan **50% (S3)**.
+* **Entry:** Bertahap di Support dengan skema Piramida **20% (S1)**, **30% (S2)**, **40% (S3)**, dan **10% (S4)**.
 """)
 
 today = datetime.now()
