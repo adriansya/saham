@@ -108,14 +108,15 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
 
                     results.append({
                         "Ticker": ticker,
-                        "Base Low": int(lo),
+                        "Low": int(lo),
                         "Max Gain %": f"{gain_h_pct:.2f}%",
                         "Close %": f"{gain_c_pct:.2f}%",
                         "Close": last_c,
                         "Position": pos,
                         "S1": s1, "S2": s2, "S3": s3, "S4": s4, "SL": sl,
                         "TP1": tp1, "TP2": tp2, "TP3": tp3,
-                        "Tgl Hit 24%": tgl_target_hit,
+                        "Price 24%": target_val,
+                        "Date 24%": tgl_target_hit,
                         "Sort_Val": gain_c_pct
                     })
                     
@@ -190,7 +191,7 @@ if btn_scan:
                             st.write(f"- TP2: **{row['TP2']}**")
                             st.write(f"- SL: **{row['SL']}**")
                         
-                        st.info(f"**Avg Price:** {int(avg_p)} | **Risk:** {abs(risk_pct):.1f}%")
-                        st.write(f"Reward TP1: **{tp1_pct:.1f}%** | TP2: **{tp2_pct:.1f}%**")
+                        st.warning(f"**Estimated Avg Price:** ~{int(avg_p)} | **Risk:** {abs(risk_pct):.2f}%")
+                        st.info(f"Reward TP1: **{tp1_pct:.2f}%** | TP2: **{tp2_pct:.2f}%**")
         else:
             st.warning("Tidak ada saham yang memenuhi kriteria.")
