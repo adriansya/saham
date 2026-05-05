@@ -178,9 +178,9 @@ if btn_scan:
             st.subheader("📝 Trading Plan")
             
             # Tampilan Grid untuk Trading Plan
-            cols = st.columns(3)
+            cols = st.columns(2)
             for idx, row in enumerate(df_hasil.to_dict(orient='records')):
-                with cols[idx % 3]:
+                with cols[idx % 2]:
                     with st.container(border=True):
                         # Hitung Avg Price 20-35-45
                         avg_p = (row['S1']*0.2) + (row['S2']*0.35) + (row['S3']*0.45)
@@ -192,14 +192,14 @@ if btn_scan:
                         c1, c2 = st.columns(2)
                         with c1:
                             st.success(f"**Buy:**")
-                            st.write(f"- S1: {row['S1']}")
-                            st.write(f"- S2: {row['S2']}")
-                            st.write(f"- S3: {row['S3']}")
-                            st.write(f"**Avg:** ~{int(avg_p)}")
+                            st.write(f"- S1: **{row['S1']}**")
+                            st.write(f"- S2: **{row['S2']}**")
+                            st.write(f"- S3: **{row['S3']}**")
+                            st.write(f"Avg: **~{int(avg_p)}**")
                         with c2:
                             st.error(f"**Exit:**")
-                            st.write(f"- TP1: {row['TP1']} ({tp1_pct:.2f}% dari S1)")
-                            st.write(f"- TP2: {row['TP2']} ({tp2_pct:.2f}% dari S1)")
-                            st.write(f"- SL: {row['SL']} ({risk_pct:.2f}% dari Avg)")
+                            st.write(f"- TP1: **{row['TP1']}** ({tp1_pct:.2f}% dari S1)")
+                            st.write(f"- TP2: **{row['TP2']}** ({tp2_pct:.2f}% dari S1)")
+                            st.write(f"- SL: **{row['SL']}** ({risk_pct:.2f}% dari Avg)")
         else:
             st.warning("Tidak ada saham yang memenuhi kriteria kenaikan >23.5% pada periode ini.")
