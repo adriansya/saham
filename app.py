@@ -142,9 +142,9 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
 # --- UI LOGIC ---
 st.title("Scanner Saham Momentum 🚀")
 st.markdown("""
-*   **Strategi:** Mencari saham dengan kenaikan mendadak >24% dan memetakan retracement-nya.
-*   **Indeks:** Kompas100, JII70, ISSI (Syariah Fokus).
-*   **Setup:** Entry bertahap pada S1, S2, dan S3.
+*   **Strategi:** Mencari saham dengan kenaikan signifikan dan memetakan retracement Fibonacci-nya.
+*   **Indeks:** JII70, KOMPAS100, IDX-MES-BUMN, IDX-SHA-GROW (Syariah).
+*   **Setup:** Entry bertahap pada Support (S1, S2, dan S3).
 """)
 
 # Setup Tanggal Otomatis
@@ -158,7 +158,7 @@ with st.sidebar:
     st.header("⚙️ Pengaturan")
     tgl_acuan = st.date_input("Tanggal Low Acuan", default_acuan)
     tgl_target = st.date_input("Tanggal Data Terakhir", today)
-    jam_input = st.text_input("Jam Low (WIB)", "15:20")
+    jam_input = "15:20
     btn_scan = st.button("Jalankan Scanner", use_container_width=True)
 
 tickers = load_tickers()
