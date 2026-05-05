@@ -300,3 +300,4 @@ if btn_scan:
         
         else:
             # ... (Tampilan jika tidak ada saham yang memenuhi kriteria)
+            st.info(f"Tidak ditemukan saham")
