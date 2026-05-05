@@ -106,13 +106,13 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                     tp3 = round_bei(lo + (range_fibo * 1.414))
 
                     # Jika harga sekarang sudah di bawah SL, abaikan
-                    if last_c <= sl:
+                    if last_c < s3:
                         continue
 
                     # Tentukan label posisi harga saat ini
-                    if last_c > s1: pos = "Above S1 (Strong)"
-                    elif last_c > s2: pos = "Area S1-S2"
-                    elif last_c > s3: pos = "Area S2-S3"
+                    if last_c > s1: pos = "> S1 (Strong)"
+                    elif last_c > s2: pos = "> S2"
+                    elif last_c > s3: pos = "> S3"
                     else: pos = "Near SL"
 
                     results.append({
