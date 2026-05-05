@@ -177,9 +177,9 @@ if btn_scan:
             st.subheader("📝 Rencana Trading (Trading Plan)")
             
             # Tampilan Grid untuk Trading Plan
-            cols = st.columns(2)
+            cols = st.columns(3)
             for idx, row in enumerate(df_hasil.to_dict(orient='records')):
-                with cols[idx % 2]:
+                with cols[idx % 3]:
                     with st.container(border=True):
                         # Hitung Avg Price 20-35-45
                         avg_p = (row['S1']*0.2) + (row['S2']*0.35) + (row['S3']*0.45)
