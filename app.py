@@ -189,15 +189,16 @@ if btn_scan:
                         st.subheader(f"📈 {row['Ticker']}")
                         c1, c2 = st.columns(2)
                         with c1:
-                            st.write(f"**Buy:**")
+                            st.success(f"**Buy:**")
                             st.write(f"- S1: {row['S1']}")
                             st.write(f"- S2: {row['S2']}")
                             st.write(f"- S3: {row['S3']}")
                             st.write(f"**Avg:** ~{int(avg_p)}")
                         with c2:
-                            st.success(f"TP1: {row['TP1']}")
-                            st.success(f"TP2: {row['TP2']}")
-                            st.error(f"SL: {row['SL']} ({risk_pct:.2f}%)")
+                            st.error(f"**Exit:**")
+                            st.write(f"- TP1: {row['TP1']}")
+                            st.write(f"- TP2: {row['TP2']}")
+                            st.error(f"- SL: {row['SL']} ({risk_pct:.2f}%)")
                             # st.success(f"TP3: {row['TP3']}")
         else:
             st.warning("Tidak ada saham yang memenuhi kriteria kenaikan >23.5% pada periode ini.")
