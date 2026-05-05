@@ -191,7 +191,7 @@ if btn_scan:
                             st.write(f"- TP2: **{row['TP2']}**")
                             st.write(f"- SL: **{row['SL']}**")
                         
-                        st.warning(f"**Estimated Avg Price:** ~{int(avg_p)} | **Risk:** {abs(risk_pct):.2f}%")
+                        st.warning(f"Estimated Avg Price: **~{int(avg_p)}** | Risk: **{abs(risk_pct):.2f}%**")
                         st.info(f"Reward TP1: **{tp1_pct:.2f}%** | TP2: **{tp2_pct:.2f}%**")
         else:
             st.warning("Tidak ada saham yang memenuhi kriteria.")
