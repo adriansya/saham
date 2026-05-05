@@ -187,7 +187,6 @@ if btn_scan:
                         risk_pct = ((row['SL'] - avg_p) / avg_p) * 100
                         tp1_pct = ((row['TP1'] - row['S1']) / row['S1']) * 100
                         tp2_pct = ((row['TP2'] - row['S1']) / row['S1']) * 100
-                        tp3_pct = ((row['TP3'] - row['S1']) / row['S1']) * 100
                         
                         st.subheader(f"📈 {row['Ticker']}")
                         c1, c2 = st.columns(2)
@@ -196,13 +195,11 @@ if btn_scan:
                             st.write(f"- S1: **{row['S1']}**")
                             st.write(f"- S2: **{row['S2']}**")
                             st.write(f"- S3: **{row['S3']}**")
-                            st.write(f"Avg: **~{int(avg_p)}**")
                         with c2:
                             st.error(f"**Exit:**")
                             st.write(f"- TP1: **{row['TP1']}**")
                             st.write(f"- TP2: **{row['TP2']}**")
-                            st.write(f"- TP2: **{row['TP3']}**")
                             st.write(f"- SL: **{row['SL']}** ({risk_pct:.2f}% dari Avg)")
-                        st.success(f"{row['Ticker']}")
+                        st.write(f"Harga rata-rata (Avg) pembelian skema cicilan adalah **~{int(avg_p)}** sehingga Risk di harga Stop Loss (SL) sebesar **{risk_pct:.2f}% **. Reward target TP1 di **{tp1_pct:.2f}%** dan TP2 di **{tp2_pct:.2f}%**.")
         else:
             st.warning("Tidak ada saham yang memenuhi kriteria kenaikan >23.5% pada periode ini.")
