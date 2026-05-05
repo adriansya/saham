@@ -185,6 +185,8 @@ if btn_scan:
                         # Hitung Avg Price 20-35-45
                         avg_p = (row['S1']*0.2) + (row['S2']*0.35) + (row['S3']*0.45)
                         risk_pct = ((row['SL'] - avg_p) / avg_p) * 100
+                        tp1_pct = ((row['TP1'] - row['S1']) / row['S1']) * 100
+                        tp2_pct = ((row['TP2'] - row['S1']) / row['S1']) * 100
                         
                         st.subheader(f"📈 {row['Ticker']}")
                         c1, c2 = st.columns(2)
@@ -196,9 +198,8 @@ if btn_scan:
                             st.write(f"**Avg:** ~{int(avg_p)}")
                         with c2:
                             st.error(f"**Exit:**")
-                            st.write(f"- TP1: {row['TP1']}")
-                            st.write(f"- TP2: {row['TP2']}")
-                            st.write(f"- TP3: {row['TP3']}")
-                            st.write(f"- SL: {row['SL']} ({risk_pct:.2f}%)")
+                            st.write(f"- TP1: {row['TP1']} ({tp1_pct:.2f}% dari S1)")
+                            st.write(f"- TP2: {row['TP2']} ({tp2_pct:.2f}% dari S1)")
+                            st.write(f"- SL: {row['SL']} ({risk_pct:.2f}% dari Avg)")
         else:
             st.warning("Tidak ada saham yang memenuhi kriteria kenaikan >23.5% pada periode ini.")
