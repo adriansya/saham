@@ -6,13 +6,12 @@ import math
 import warnings
 import os
 
+# --- KONFIGURASI ---
 warnings.simplefilter(action='ignore', category=FutureWarning)
-
-# --- KONFIGURASI HALAMAN ---
-st.set_page_config(page_title="Scanner Saham", layout="wide")
+st.set_page_config(page_title="Scanner Saham Momentum", layout="wide")
 
 def round_bei(price, direction="up"):
-    """Fungsi pembulatan sesuai fraksi harga BEI."""
+    """Fungsi pembulatan sesuai fraksi harga BEI terbaru."""
     if price <= 0: return 0
     if price < 200: f = 1
     elif price < 500: f = 2
@@ -26,7 +25,7 @@ def round_bei(price, direction="up"):
         return int(math.floor(price / f) * f)
 
 def get_tick_down(price, ticks=4):
-    """Menghitung harga N tick di bawah harga acuan."""
+    """Menghitung harga N tick di bawah harga acuan dengan validasi fraksi."""
     for _ in range(ticks):
         if price <= 200: f = 1
         elif price <= 500: f = 2
@@ -37,22 +36,24 @@ def get_tick_down(price, ticks=4):
     return int(price)
 
 def load_tickers(file_path="tickers.txt"):
-    """Mengambil daftar ticker dari file eksternal."""
     if os.path.exists(file_path):
         with open(file_path, "r") as f:
-            lines = f.readlines()
-            return [line.strip().upper() for line in lines if line.strip()]
-    else:
-        st.error(f"File {file_path} tidak ditemukan!")
-        return []
+            return [line.strip().upper() for line in f if line.strip()]
+    return []
 
 def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
     results = []
     tgl_start = tgl_acuan.strftime("%Y-%m-%d")
-    tgl_end = (tgl_target + timedelta(days=1)).strftime("%Y-%m-%d")
+    # Buffer tgl_end untuk memastikan data hari terakhir tertangkap
+    tgl_end_query = (tgl_target + timedelta(days=2)).strftime("%Y-%m-%d")
     
     # Konversi WIB ke UTC (-7)
-    jam_utc = f"{int(jam.split(':')[0]) - 7:02d}:{jam.split(':')[1]}"
+    try:
+        hour_wib = int(jam.split(':')[0])
+        minute_wib = jam.split(':')[1]
+        jam_utc = f"{hour_wib - 7:02d}:{minute_wib}"
+    except:
+        jam_utc = "08:20" # Default fallback
     
     progress_bar = st.progress(0)
     status_text = st.empty()
@@ -60,132 +61,143 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
     for i, ticker in enumerate(tickers):
         try:
             symbol = ticker + ".JK"
-            status_text.text(f"Memeriksa {ticker} ...")
+            status_text.text(f"Scanning {i+1}/{len(tickers)}: {ticker}")
             
-            df_5m = yf.download(symbol, start=tgl_start, end=(tgl_acuan + timedelta(days=1)).strftime("%Y-%m-%d"), interval="5m", progress=False)
+            # Download data intraday untuk cari LOW pada jam tertentu
+            df_5m = yf.download(symbol, start=tgl_start, end=(tgl_acuan + timedelta(days=2)).strftime("%Y-%m-%d"), interval="5m", progress=False)
             ticker_obj = yf.Ticker(symbol)
-            df_day = ticker_obj.history(start=tgl_start, end=tgl_end)
+            df_day = ticker_obj.history(start=tgl_start, end=tgl_end_query)
             
             if isinstance(df_5m.columns, pd.MultiIndex):
                 df_5m.columns = df_5m.columns.get_level_values(0)
 
             if not df_5m.empty and not df_day.empty:
+                # Cari harga LOW pada jam acuan
                 match = df_5m[df_5m.index.strftime('%H:%M') == jam_utc]
-                if match.empty: continue
-
+                if match.empty: 
+                    # Jika jam tepat tidak ada, ambil data pertama di hari tersebut
+                    match = df_5m.head(1)
+                
                 lo = float(match['Low'].iloc[0])
                 target_val = lo * 1.24 
                 
                 max_high_val = float(df_day['High'].max())
                 gain_h_pct = ((max_high_val - lo) / lo) * 100
                 
+                # Cek kapan target 24% tercapai
                 df_target_hit = df_day[df_day['High'] >= target_val]
                 tgl_target_hit = df_target_hit.index[0].strftime("%d-%m-%Y") if not df_target_hit.empty else "-"
 
                 last_c = float(df_day['Close'].iloc[-1])
                 gain_c_pct = ((last_c - lo) / lo) * 100
 
+                # FILTER: Hanya saham dengan kenaikan signifikan (>23.5%)
                 if gain_h_pct > 23.5:
                     range_fibo = target_val - lo
 
-                    # Perhitungan Level
+                    # Perhitungan Level Fibonacci
                     s1 = round_bei(lo + (range_fibo * 0.886))
-                    s2 = round_bei(lo + (range_fibo * 0.618))
-                    s3 = round_bei(lo + (range_fibo * 0.382))
-                    s4 = round_bei(lo + (range_fibo * 0.382))
-                    cl = get_tick_down(s4, ticks=4)
+                    s2 = round_bei(lo + (range_fibo * 0.618)) # S2 di Golden Ratio
+                    s3 = round_bei(lo + (range_fibo * 0.382)) # S3 di Support Kuat
+                    sl = get_tick_down(s3, ticks=4) # SL dari S3
                     
                     tp1 = round_bei(lo + (range_fibo * 1.128))
                     tp2 = round_bei(lo + (range_fibo * 1.272))
                     tp3 = round_bei(lo + (range_fibo * 1.414))
 
-                    if last_c <= cl:
+                    # Jika harga sekarang sudah di bawah SL, abaikan
+                    if last_c <= sl:
                         continue
-                    if last_c > s1: pos = "> S1"
-                    elif last_c > s2: pos = "> S2"
-                    elif last_c > s3: pos = "> S3"
-                   # elif last_c > s4: pos = "> S4"
-                    elif last_c > cl: pos = "> CL"
-                    else: pos = "< CL"
+
+                    # Tentukan label posisi harga saat ini
+                    if last_c > s1: pos = "Above S1 (Strong)"
+                    elif last_c > s2: pos = "Area S1-S2"
+                    elif last_c > s3: pos = "Area S2-S3"
+                    else: pos = "Near SL"
 
                     results.append({
                         "Ticker": ticker,
-                        "Low": int(lo),
-                        "Max High %": f"{gain_h_pct:.2f}%",
-                        "Max High": int(max_high_val),
+                        "Base Low": int(lo),
+                        "Max Gain %": f"{gain_h_pct:.2f}%",
                         "Close %": f"{gain_c_pct:.2f}%",
-                        "Close": int(last_c),
                         "Position": pos,
-                        "S1": s1, "S2": s2, "S3": s3, "SL": cl,
+                        "S1": s1, "S2": s2, "S3": s3, "SL": sl,
                         "TP1": tp1, "TP2": tp2, "TP3": tp3,
-                        "Target 24%": round_bei(target_val),
-                        "Tgl Target 24%": tgl_target_hit,
+                        "Tgl Hit 24%": tgl_target_hit,
                         "Sort_Val": gain_c_pct
                     })
                     
-        except Exception: 
+        except Exception as e:
             continue
-            
-        progress_bar.progress((i + 1) / len(tickers))
+        finally:
+            progress_bar.progress((i + 1) / len(tickers))
         
-    status_text.text("Scan selesai!")
+    status_text.empty()
     df = pd.DataFrame(results)
     if not df.empty:
         df = df.sort_values(by="Sort_Val", ascending=False).drop(columns=["Sort_Val"])
-        df = df.reset_index(drop=True)
-        df.index = df.index + 1 
+        df.index = range(1, len(df) + 1)
     return df
 
-# --- LOGIKA TANGGAL OTOMATIS ---
+# --- UI LOGIC ---
+st.title("Scanner Saham Momentum 🚀")
+st.markdown("""
+*   **Strategi:** Mencari saham dengan kenaikan mendadak >24% dan memetakan retracement-nya.
+*   **Indeks:** Kompas100, JII70, ISSI (Syariah Fokus).
+*   **Setup:** Entry bertahap pada S1, S2, dan S3.
+""")
+
+# Setup Tanggal Otomatis
 today = datetime.now()
 if today.day >= 15:
     default_acuan = datetime(today.year, today.month, 15)
 else:
-    first_day_this_month = today.replace(day=1)
-    last_day_last_month = first_day_this_month - timedelta(days=1)
-    default_acuan = datetime(last_day_last_month.year, last_day_last_month.month, 15)
-
-# --- ANTARMUKA PENGGUNA (UI) ---
-st.title("Scanner Saham Naik 🚀")
-st.write("✅ Mencari saham syariah dengan lonjakan harga signifikan kurang dari 1 bulan. Kriteria saham syariah adalah masuk dalam gabungan Indeks JII70, KOMPAS100, IDX-MES-BUMN, & IDX-SHA-GROW.")
-st.write("✅ Perhitungan Support (S), Stop Loss (SL), dan Taking Profit (TP) dengan Fibonacci.\n Support terkuat pada area Golden Ratio S3 (0.618) dan S4 (0.382)")
+    default_acuan = (today.replace(day=1) - timedelta(days=1)).replace(day=15)
 
 with st.sidebar:
-    st.header("Parameter Scan")
-    tgl_acuan = st.date_input("Tanggal Acuan Low", default_acuan)
-    tgl_target = st.date_input("Tanggal Target (Data Terakhir)", today)
-    jam_input = "15:20"
-    btn_scan = st.button("Mulai Scan")
+    st.header("⚙️ Pengaturan")
+    tgl_acuan = st.date_input("Tanggal Low Acuan", default_acuan)
+    tgl_target = st.date_input("Tanggal Data Terakhir", today)
+    jam_input = st.text_input("Jam Low (WIB)", "15:20")
+    btn_scan = st.button("Jalankan Scanner", use_container_width=True)
 
-stock_ticker = load_tickers("tickers.txt")
+tickers = load_tickers()
 
 if btn_scan:
-    if not stock_ticker:
-        st.error("Daftar saham kosong. Periksa file tickers.txt")
+    if not tickers:
+        st.error("File 'tickers.txt' tidak ditemukan atau kosong!")
     else:
-        df_hasil = jalankan_scanner_final(stock_ticker, tgl_acuan, tgl_target, jam_input)
+        df_hasil = jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam_input)
+        
         if not df_hasil.empty:
-            st.success(f"Ditemukan {len(df_hasil)} saham!")
+            st.success(f"Ditemukan {len(df_hasil)} saham potensial!")
             st.dataframe(df_hasil, use_container_width=True)
 
-            # --- TRADING PLAN ---
             st.divider()
-            st.subheader("📝 Trading Plan")
+            st.subheader("📝 Rencana Trading (Trading Plan)")
             
-            for index, row in df_hasil.iterrows():
-                # Hitung Harga Avg (Skema 20-35-45)
-                avg_p = (row['S1']*0.2) + (row['S2']*0.35) + (row['S3']*0.45)
-                # Risk dari Avg ke CL
-                risk_pct = ((row['SL'] - avg_p) / avg_p) * 100
-                # Profit dari S1
-                tp1_p = ((row['TP1'] - row['S1']) / row['S1']) * 100
-                tp2_p = ((row['TP2'] - row['S1']) / row['S1']) * 100
-                tp3_p = ((row['TP3'] - row['S1']) / row['S1']) * 100
-                
-                st.markdown(f"### **{row['Ticker']}**")
-                st.write(f"**Buy :** {row['S1']}, {row['S2']}, {row['S3']}")
-                st.write(f"**SL :** {row['SL']} ({risk_pct:.2f}% dari avg)")
-                st.write(f"**TP :** {row['TP1']} ({tp1_p:.2f}%), {row['TP2']} ({tp2_p:.2f}%), {row['TP3']} ({tp3_p:.2f}%)")
-                st.write("---")
+            # Tampilan Grid untuk Trading Plan
+            cols = st.columns(2)
+            for idx, row in enumerate(df_hasil.to_dict(orient='records')):
+                with cols[idx % 2]:
+                    with st.container(border=True):
+                        # Hitung Avg Price 20-35-45
+                        avg_p = (row['S1']*0.2) + (row['S2']*0.35) + (row['S3']*0.45)
+                        risk_pct = ((row['SL'] - avg_p) / avg_p) * 100
+                        
+                        st.subheader(f"📈 {row['Ticker']}")
+                        c1, c2 = st.columns(2)
+                        with c1:
+                            st.write(f"**Strategi Buy (20/35/45):**")
+                            st.write(f"- S1: {row['S1']}")
+                            st.write(f"- S2: {row['S2']}")
+                            st.write(f"- S3: {row['S3']}")
+                            st.write(f"**Avg Price:** ~{int(avg_p)}")
+                        with c2:
+                            st.write(f"**Exit Plan:**")
+                            st.error(f"SL: {row['SL']} ({risk_pct:.2f}%)")
+                            st.success(f"TP1: {row['TP1']}")
+                            st.success(f"TP2: {row['TP2']}")
+                            st.success(f"TP3: {row['TP3']}")
         else:
-            st.warning("Tidak ada saham yang memenuhi kriteria.")
+            st.warning("Tidak ada saham yang memenuhi kriteria kenaikan >23.5% pada periode ini.")
