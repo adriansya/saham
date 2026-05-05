@@ -175,7 +175,7 @@ if btn_scan:
             st.dataframe(df_hasil, use_container_width=True)
 
             st.divider()
-            st.subheader("📝 Rencana Trading (Trading Plan)")
+            st.subheader("📝 Trading Plan")
             
             # Tampilan Grid untuk Trading Plan
             cols = st.columns(3)
@@ -193,12 +193,12 @@ if btn_scan:
                             st.write(f"- S1: {row['S1']}")
                             st.write(f"- S2: {row['S2']}")
                             st.write(f"- S3: {row['S3']}")
-                            # st.write(f"**Avg:** ~{int(avg_p)}")
+                            st.write(f"**Avg:** ~{int(avg_p)}")
                         with c2:
                             st.error(f"**Exit:**")
                             st.write(f"- TP1: {row['TP1']}")
                             st.write(f"- TP2: {row['TP2']}")
+                            st.write(f"- TP3: {row['TP3']}")
                             st.write(f"- SL: {row['SL']} ({risk_pct:.2f}%)")
-                            # st.success(f"TP3: {row['TP3']}")
         else:
             st.warning("Tidak ada saham yang memenuhi kriteria kenaikan >23.5% pada periode ini.")
