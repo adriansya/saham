@@ -120,6 +120,7 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                         "Base Low": int(lo),
                         "Max Gain %": f"{gain_h_pct:.2f}%",
                         "Close %": f"{gain_c_pct:.2f}%",
+                        "Close": last_c,
                         "Position": pos,
                         "S1": s1, "S2": s2, "S3": s3, "SL": sl,
                         "TP1": tp1, "TP2": tp2, "TP3": tp3,
