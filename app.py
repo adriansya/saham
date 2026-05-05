@@ -158,7 +158,7 @@ with st.sidebar:
     st.header("⚙️ Pengaturan")
     tgl_acuan = st.date_input("Tanggal Low Acuan", default_acuan)
     tgl_target = st.date_input("Tanggal Data Terakhir", today)
-    jam_input = "15:20
+    jam_input = "15:20"
     btn_scan = st.button("Jalankan Scanner", use_container_width=True)
 
 tickers = load_tickers()
