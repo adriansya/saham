@@ -5,6 +5,9 @@ from datetime import datetime, timedelta
 import math
 import warnings
 import os
+# --- TAMBAHAN IMPORT UNTUK CHART ---
+import plotly.graph_objects as go 
+
 
 # --- KONFIGURASI ---
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -131,6 +134,76 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
         df.index = range(1, len(df) + 1)
     return df
 
+# ... (kode fungsi sebelumnya: round_bei, get_tick_down, load_tickers, jalankan_scanner_final) ...
+
+def plot_interactive_chart(ticker, levels):
+    """Membuat chart candlestick interaktif dengan garis Support, TP, dan SL."""
+    symbol = ticker + ".JK"
+    
+    # Hitung rentang waktu: 1 bulan ke belakang dari hari ini
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=30)
+    
+    with st.spinner(f'Mengambil data chart 2H untuk {ticker}...'):
+        # Ambil data 2 jam (2h)
+        df_chart = yf.download(symbol, start=start_date, end=end_date, interval="2h", progress=False)
+        
+        # Perbaikan MultiIndex Columns jika ada
+        if isinstance(df_chart.columns, pd.MultiIndex):
+            df_chart.columns = df_chart.columns.get_level_values(0)
+
+    if df_chart.empty:
+        st.error(f"Tidak dapat mengambil data chart untuk {ticker}.")
+        return
+
+    # Buat figure Candlestick
+    fig = go.Figure(data=[go.Candlestick(x=df_chart.index,
+                    open=df_chart['Open'],
+                    high=df_chart['High'],
+                    low=df_chart['Low'],
+                    close=df_chart['Close'],
+                    name="Candlestick")])
+
+    # --- TAMBAHKAN GARIS HORIZONTAL (SUPPORT, TP, CL) ---
+    
+    # Definisi Level (Warna disesuaikan: Ijo buat Buy/TP, Merah buat SL)
+    plot_levels = [
+        {'id': 'S1', 'val': levels['S1'], 'color': 'rgba(34, 139, 34, 0.6)', 'dash': 'dash'}, # ForestGreen
+        {'id': 'S2', 'val': levels['S2'], 'color': 'rgba(50, 205, 50, 0.7)', 'dash': 'dash'}, # LimeGreen
+        {'id': 'S3', 'val': levels['S3'], 'color': 'rgba(173, 255, 47, 0.8)', 'dash': 'dash'}, # GreenYellow
+        {'id': 'S4', 'val': levels['S4'], 'color': 'rgba(255, 215, 0, 0.8)', 'dash': 'dot'},  # Gold
+        {'id': 'TP1', 'val': levels['TP1'], 'color': 'rgba(0, 0, 255, 0.8)', 'dash': 'solid'}, # Blue
+        {'id': 'TP2', 'val': levels['TP2'], 'color': 'rgba(0, 0, 139, 0.9)', 'dash': 'solid'}, # DarkBlue
+        {'id': 'CL (SL)', 'val': levels['SL'], 'color': 'rgba(255, 0, 0, 0.9)', 'dash': 'solid'}, # Red
+    ]
+
+    for level in plot_levels:
+        if level['val'] > 0: # Pastikan harganya valid
+            fig.add_hline(y=level['val'], 
+                          line_dash=level['dash'],
+                          line_color=level['color'],
+                          line_width=2,
+                          annotation_text=f"{level['id']} ({int(level['val'])})", 
+                          annotation_position="top right",
+                          annotation_font_color=level['color'])
+
+    # Konfigurasi Layout
+    fig.update_layout(
+        title=f"Chart 2 Jam (2H) - 1 Bulan Terakhir: {ticker}",
+        yaxis_title="Harga (IDR)",
+        xaxis_title="Waktu",
+        xaxis_rangeslider_visible=False, # Matikan range slider bawah agar chart utama lebih luas
+        height=600, # Tinggi chart
+        template="plotly_dark", # Tema gelap (cocok buat trader)
+        hovermode='x unified' # Tampilan hover yang rapi
+    )
+
+    # Tampilkan di Streamlit
+    st.plotly_chart(fig, use_container_width=True)
+
+# --- UI LOGIC STARTS HERE ---
+# ... (kode UI Logic sebelumnya) ...
+
 # --- UI LOGIC ---
 st.title("Scanner Saham Momentum 🚀")
 st.markdown("""
@@ -167,6 +240,16 @@ if btn_scan:
             st.subheader("📝 Trading Plan")
             
             cols = st.columns(2)
+            # ... (di dalam if btn_scan: ... if not df_hasil.empty: ... st.subheader("📝 Trading Plan")) ...
+            
+            # --- MODIFIKASI DISINI ---
+            
+            # Inisialisasi session state untuk menyimpan saham mana yang sedang dipilih/diklik
+            if 'selected_ticker' not in st.session_state:
+                st.session_state.selected_ticker = None
+
+            # Tampilan Grid untuk Trading Plan
+            cols = st.columns(2)
             for idx, row in enumerate(df_hasil.to_dict(orient='records')):
                 with cols[idx % 2]:
                     with st.container(border=True):
@@ -177,20 +260,43 @@ if btn_scan:
                         tp1_pct = ((row['TP1'] - avg_p) / avg_p) * 100
                         tp2_pct = ((row['TP2'] - avg_p) / avg_p) * 100
                         
-                        st.subheader(f"📈 {row['Ticker']}")
+                        # --- GANTI SUBHEADER MENJADI TOMBOL ---
+                        # Buat key unik untuk setiap tombol menggunakan ticker dan index
+                        btn_key = f"btn_{row['Ticker']}_{idx}"
+                        if st.button(f"📈 {row['Ticker']} (Klik untuk Chart)", key=btn_key, use_container_width=True):
+                            st.session_state.selected_ticker = row['Ticker']
+                            # Menyimpan data level untuk chart di session state
+                            st.session_state.current_levels = {
+                                'S1': row['S1'], 'S2': row['S2'], 'S3': row['S3'], 'S4': row['S4'],
+                                'TP1': row['TP1'], 'TP2': row['TP2'], 'SL': row['SL']
+                            }
+                        
                         c1, c2 = st.columns(2)
                         with c1:
                             st.success(f"**Buy Zone:**")
-                            st.write(f"- S1: **{row['S1']}**")
-                            st.write(f"- S2: **{row['S2']}**")
-                            st.write(f"- S3: **{row['S3']}-{row['S4']}**")
+                            st.write(f"- S1 (20%): **{row['S1']}**")
+                            st.write(f"- S2 (30%): **{row['S2']}**")
+                            st.write(f"- S3-S4 (50%): **{row['S3']}-{row['S4']}**")
                         with c2:
                             st.error(f"**Sell Zone:**")
                             st.write(f"- TP1: **{row['TP1']}**")
                             st.write(f"- TP2: **{row['TP2']}**")
-                            st.write(f"- SL: **{row['SL']}**")
+                            st.write(f"- SL: **<{row['SL']}**") # Tampilan diubah jadi < CL
                         
-                        st.info(f"**Avg Price:** {int(avg_p)} | **Risk:** {abs(risk_pct):.1f}%")
-                        st.write(f"Reward TP1: **{tp1_pct:.1f}%** | TP2: **{tp2_pct:.1f}%**")
+                        st.info(f"**Avg Price:** {int(avg_p)} | **Risk:** {abs(risk_pct):.2f}%")
+                        st.write(f"Potensi Reward TP1: **{tp1_pct:.2f}%**")
+
+            # --- AREA UNTUK MENAMPILKAN CHART JIKA SAHAM DIKLIK ---
+            st.divider()
+            if st.session_state.selected_ticker:
+                st.subheader(f"📊 Detil Chart: {st.session_state.selected_ticker}")
+                # Panggil fungsi chart dengan data yang disimpan di session state
+                plot_interactive_chart(st.session_state.selected_ticker, st.session_state.current_levels)
+                
+                # Tombol untuk menutup chart
+                if st.button("Tutup Chart"):
+                    st.session_state.selected_ticker = None
+                    st.rerun() # Refresh untuk menghilangkan chart
+        
         else:
-            st.warning("Tidak ada saham yang memenuhi kriteria.")
+            # ... (Tampilan jika tidak ada saham yang memenuhi kriteria)
