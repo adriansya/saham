@@ -134,8 +134,8 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
 # --- UI LOGIC ---
 st.title("Scanner Saham Momentum 🚀")
 st.markdown("""
-* **Strategi:** Momentum Retracement Fibonacci.
-* **Skema Entry:** Piramida **20% (S1)**, **30% (S2)**, **40% (S3)**, dan **10% (S4)**.
+* **Strategi:** Momentum dengan Fibonacci Retracement.
+* **Skema Entry:** Bertahap di Support dengan skema Piramida **20% (S1)**, **30% (S2)**, dan **50% (S3)**.
 """)
 
 today = datetime.now()
@@ -181,16 +181,16 @@ if btn_scan:
                         c1, c2 = st.columns(2)
                         with c1:
                             st.success(f"**Buy Zone:**")
-                            st.write(f"- S1 (20%): **{row['S1']}**")
-                            st.write(f"- S2 (30%): **{row['S2']}**")
-                            st.write(f"- S3-S4 (50%): **{row['S3']}-{row['S4']}**")
+                            st.write(f"- S1: **{row['S1']}**")
+                            st.write(f"- S2: **{row['S2']}**")
+                            st.write(f"- S3: **{row['S3']}-{row['S4']}**")
                         with c2:
                             st.error(f"**Sell Zone:**")
                             st.write(f"- TP1: **{row['TP1']}**")
                             st.write(f"- TP2: **{row['TP2']}**")
                             st.write(f"- SL: **{row['SL']}**")
                         
-                        st.info(f"**Avg Price:** {int(avg_p)} | **Risk:** {abs(risk_pct):.2f}%")
-                        st.write(f"Potensi Reward TP1: **{tp1_pct:.2f}%**")
+                        st.info(f"**Avg Price:** {int(avg_p)} | **Risk:** {abs(risk_pct):.1f}%")
+                        st.write(f"Reward TP1: **{tp1_pct:.1f}%** | TP2: **{tp2_pct:.1f}%**")
         else:
             st.warning("Tidak ada saham yang memenuhi kriteria.")
