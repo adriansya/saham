@@ -200,6 +200,7 @@ if btn_scan:
                             st.write(f"- TP1: **{row['TP1']}**")
                             st.write(f"- TP2: **{row['TP2']}**")
                             st.write(f"- SL: **{row['SL']}** ({risk_pct:.2f}% dari Avg)")
-                        st.write(f"Harga rata-rata (Avg) pembelian skema cicilan adalah **~{int(avg_p)}** sehingga Risk di harga Stop Loss (SL) sebesar **{risk_pct:.2f}% **. Reward target TP1 di **{tp1_pct:.2f}%** dan TP2 di **{tp2_pct:.2f}%**.")
+                        st.write(f"Harga rata-rata (Avg) pembelian skema cicilan adalah **{int(avg_p)}** sehingga Risk di harga Stop Loss (SL) = **{risk_pct:.2f}%**.")
+                        st.write(f"Reward target harga TP1 = **{tp1_pct:.2f}%** dan TP2 = **{tp2_pct:.2f}%**.")
         else:
             st.warning("Tidak ada saham yang memenuhi kriteria kenaikan >23.5% pada periode ini.")
