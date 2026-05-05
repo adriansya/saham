@@ -196,7 +196,7 @@ if btn_scan:
                             st.write(f"- S2: **{row['S2']}**")
                             st.write(f"- S3: **{row['S3']}**")
                         with c2:
-                            st.error(f"**Exit:**")
+                            st.error(f"**Sell:**")
                             st.write(f"- TP1: **{row['TP1']}**")
                             st.write(f"- TP2: **{row['TP2']}**")
                             st.write(f"- SL: **{row['SL']}**")
