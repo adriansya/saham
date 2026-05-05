@@ -87,6 +87,7 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
 
                 if gain_h_pct > 23.5:
                     range_fibo = target_val - lo
+                    target = round_bei(target_val)
 
                     s1 = round_bei(lo + (range_fibo * 0.886))
                     s2 = round_bei(lo + (range_fibo * 0.618))
@@ -115,8 +116,8 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                         "Position": pos,
                         "S1": s1, "S2": s2, "S3": s3, "S4": s4, "SL": sl,
                         "TP1": tp1, "TP2": tp2, "TP3": tp3,
-                        "Price 24%": target_val,
-                        "Date 24%": tgl_target_hit,
+                        "Price target": target,
+                        "Date target": tgl_target_hit,
                         "Sort_Val": gain_c_pct
                     })
                     
