@@ -189,14 +189,13 @@ if btn_scan:
                         st.subheader(f"📈 {row['Ticker']}")
                         c1, c2 = st.columns(2)
                         with c1:
-                            st.write(f"**Strategi Buy (20/35/45):**")
+                            st.write(f"**Buy:**")
                             st.write(f"- S1: {row['S1']}")
                             st.write(f"- S2: {row['S2']}")
                             st.write(f"- S3: {row['S3']}")
                             st.write(f"**Avg Price:** ~{int(avg_p)}")
+                            st.error(f"SL: {row['SL']} ({risk_pct:.1f}%)")
                         with c2:
-                            st.write(f"**Exit Plan:**")
-                            st.error(f"SL: {row['SL']} ({risk_pct:.2f}%)")
                             st.success(f"TP1: {row['TP1']}")
                             st.success(f"TP2: {row['TP2']}")
                             st.success(f"TP3: {row['TP3']}")
