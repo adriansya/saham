@@ -169,9 +169,9 @@ if btn_scan:
             st.divider()
             st.subheader("📝 Trading Plan")
             
-            cols = st.columns(2)
+            cols = st.columns(3)
             for idx, row in enumerate(df_hasil.to_dict(orient='records')):
-                with cols[idx % 2]:
+                with cols[idx % 3]:
                     with st.container(border=True):
                         # Hitung Avg Price dengan skema 20-30-40-10
                         avg_p = (row['S1']*0.20) + (row['S2']*0.30) + (row['S3']*0.40) + (row['S4']*0.10)
@@ -184,13 +184,13 @@ if btn_scan:
                         st.subheader(f"📈 {row['Ticker']}")
                         c1, c2 = st.columns(2)
                         with c1:
-                            # st.success(f"**Buy Zone:**")
+                            st.success(f"**Buy Zone:**")
                             st.write(f"- S1: **{row['S1']}**")
                             st.write(f"- S2: **{row['S2A']}** - **{row['S2']}**")
                             st.write(f"- S3: **{row['S3']}** - **{row['S4']}**")
                             # st.write(f"- S4: **{row['S4']}**")
                         with c2:
-                            # st.error(f"**Sell Zone:**")
+                            st.error(f"**Sell Zone:**")
                             st.write(f"- TP1: **{row['TP1']}**")
                             st.write(f"- TP2: **{row['TP2']}**")
                             # st.write(f"- TP3: **{row['TP3']}**")
