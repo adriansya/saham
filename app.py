@@ -184,19 +184,19 @@ if btn_scan:
                         st.subheader(f"📈 {row['Ticker']}")
                         c1, c2 = st.columns(2)
                         with c1:
-                            st.success(f"**Buy Zone:**")
+                            # st.success(f"**Buy Zone:**")
                             st.write(f"- S1: **{row['S1']}**")
                             st.write(f"- S2: **{row['S2A']}** - **{row['S2']}**")
                             st.write(f"- S3: **{row['S3']}** - **{row['S4']}**")
                             # st.write(f"- S4: **{row['S4']}**")
                         with c2:
-                            st.error(f"**Sell Zone:**")
+                            # st.error(f"**Sell Zone:**")
                             st.write(f"- TP1: **{row['TP1']}**")
                             st.write(f"- TP2: **{row['TP2']}**")
                             # st.write(f"- TP3: **{row['TP3']}**")
                             st.write(f"- SL: **{row['SL']}**")
                         
-                        st.warning(f"Estimated Avg Price: **~{int(avg_p)}** | Risk: **{abs(risk_pct):.2f}%**")
+                        st.success(f"Estimated Avg Price: **~{int(avg_p)}** | Risk: **{abs(risk_pct):.2f}%**")
                         st.info(f"Reward TP1: **{tp1_pct:.2f}%** | TP2: **{tp2_pct:.2f}%**")
         else:
             st.warning("Tidak ada saham yang memenuhi kriteria.")
