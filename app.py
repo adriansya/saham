@@ -137,8 +137,8 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
 # --- UI LOGIC ---
 st.title("Scanner Saham Momentum 🚀")
 st.markdown("""
-* **Strategi:** Momentum dengan Fibonacci Retracement.
-* **Entry:** Bertahap di Support dengan skema Piramida **20% (S1)**, **30% (S2)**, **40% (S3)**, dan **10% (S4)**.
+* **Strategi:** Momentum dengan Fibonacci Retracement. Area terkuat di Support 2 (S2).
+* **Entry:** Cicil di Support dengan skema Piramida (ke bawah semakin besar).
 """)
 
 today = datetime.now()
@@ -197,6 +197,6 @@ if btn_scan:
                             st.write(f"- SL: **{row['SL']}**")
                         
                         st.warning(f"Estimated Avg Price: **~{int(avg_p)}** | Risk: **{abs(risk_pct):.2f}%**")
-                        st.info(f"Reward TP1: **{tp1_pct:.2f}%** | TP2: **{tp2_pct:.2f}%** | TP3: **{tp3_pct:.2f}%**")
+                        st.info(f"Reward TP1: **{tp1_pct:.2f}%** | TP2: **{tp2_pct:.2f}%**")
         else:
             st.warning("Tidak ada saham yang memenuhi kriteria.")
