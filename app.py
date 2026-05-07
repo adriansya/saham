@@ -90,6 +90,7 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                     target = round_bei(target_val)
 
                     s1 = round_bei(lo + (range_fibo * 0.886))
+                    s2a = round_bei(lo + (range_fibo * 0.666))
                     s2 = round_bei(lo + (range_fibo * 0.618))
                     s3 = round_bei(lo + (range_fibo * 0.382))
                     s4 = get_tick_down(s3, ticks=2) # 2 tick di bawah S3
@@ -115,7 +116,7 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                         "Close %": f"{gain_c_pct:.2f}%",
                         "Close": last_c,
                         "Position": pos,
-                        "S1": s1, "S2": s2, "S3": s3, "S4": s4, "SL": sl,
+                        "S1": s1, "S2A": s2a, "S2": s2, "S3": s3, "S4": s4, "SL": sl,
                         "TP1": tp1, "TP2": tp2, "TP3": tp3,
                         "Date target": tgl_target_hit,
                         "Sort_Val": gain_c_pct
@@ -185,14 +186,14 @@ if btn_scan:
                         with c1:
                             st.success(f"**Buy Zone:**")
                             st.write(f"- S1: **{row['S1']}**")
-                            st.write(f"- S2: **{row['S2']}**")
-                            st.write(f"- S3: **{row['S3']}**")
-                            st.write(f"- S4: **{row['S4']}**")
+                            st.write(f"- S2: **{row['S2A']}** - **{row['S2']}**")
+                            st.write(f"- S3: **{row['S3']}** - **{row['S4']}**")
+                            # st.write(f"- S4: **{row['S4']}**")
                         with c2:
                             st.error(f"**Sell Zone:**")
                             st.write(f"- TP1: **{row['TP1']}**")
                             st.write(f"- TP2: **{row['TP2']}**")
-                            st.write(f"- TP3: **{row['TP3']}**")
+                            # st.write(f"- TP3: **{row['TP3']}**")
                             st.write(f"- SL: **{row['SL']}**")
                         
                         st.warning(f"Estimated Avg Price: **~{int(avg_p)}** | Risk: **{abs(risk_pct):.2f}%**")
