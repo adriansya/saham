@@ -100,12 +100,15 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                     tp2 = round_bei(lo + (range_fibo * 1.272))
                     tp3 = round_bei(lo + (range_fibo * 1.414))
 
-                    if last_c < s3:
+                    if last_c < sl:
+                        continue
+                    if last_c < 100: 
                         continue
 
                     if last_c > s1: pos = "> S1 (Strong)"
                     elif last_c > s2: pos = "> S2"
                     elif last_c > s3: pos = "> S3"
+                    elif last_c > s4: pos = "> S4"
                     else: pos = "Near SL"
 
                     results.append({
