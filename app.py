@@ -180,7 +180,7 @@ if btn_scan:
                 with cols[idx % 3]:
                     with st.container(border=True):
                         # Hitung Avg Price dengan skema 20-30-40 (90% modal)
-                        avg_p = (row['S1']*0.20) + (row['S2']*0.30) + (row['S3']*0.40)
+                        avg_p = ((row['S1']*0.20) + (row['S2']*0.30) + (row['S3']*0.40))/0.90
                         
                         risk_pct = ((row['SL'] - avg_p) / avg_p) * 100
                         tp1_pct = ((row['TP1'] - avg_p) / avg_p) * 100
