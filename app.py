@@ -101,14 +101,17 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                     tp2 = round_bei(lo + (range_fibo * 1.272))
                     tp3 = round_bei(lo + (range_fibo * 1.414))
 
-                    # if last_c < sl:
-                        # continue
+                    if last_c < sl:
+                        continue
                     if last_c < 100: 
                         continue
 
                     if last_c > s1: pos = "> S1 (Strong)"
                     elif last_c > s2: pos = "> S2"
                     elif last_c > s3: pos = "> S3"
+                    elif last_c == s1: pos = "S1"
+                    elif last_c == s2: pos = "S2"
+                    elif last_c == s3: pos = "S3"
                     # elif last_c > s4: pos = "> S4"
                     else: pos = "Near SL"
 
@@ -202,7 +205,7 @@ if btn_scan:
                             # st.write(f"- TP3: **{row['TP3']}**")
                             st.write(f"- SL: **{row['SL']}**")
                         
-                        st.success(f"Estimated Avg Price: **~{int(avg_p)}** {row['S1']*0.20}+{(row['S2']*0.30)}+{(row['S3']*0.40)} | Risk: **{abs(risk_pct):.2f}%**")
+                        st.success(f"Estimated Avg Price: **~{int(avg_p)}** | Risk: **{abs(risk_pct):.2f}%**")
                         st.info(f"Reward TP1: **{tp1_pct:.2f}%** | TP2: **{tp2_pct:.2f}%**")
         else:
             st.warning("Tidak ada saham yang memenuhi kriteria.")
