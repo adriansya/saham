@@ -85,7 +85,7 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                 last_c = float(df_day['Close'].iloc[-1])
                 gain_c_pct = ((last_c - lo) / lo) * 100
 
-                if gain_h_pct > 23.5:
+                if gain_h_pct >= 24:
                     range_fibo = target_val - lo
                     target = round_bei(target_val)
 
