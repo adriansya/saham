@@ -93,8 +93,9 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                     s2a = round_bei(lo + (range_fibo * 0.666))
                     s2 = round_bei(lo + (range_fibo * 0.618))
                     s3 = round_bei(lo + (range_fibo * 0.382))
-                    s4 = get_tick_down(s3, ticks=2) # 2 tick di bawah S3
-                    sl = get_tick_down(s3, ticks=4) # 4 tick di bawah S3 (Cutloss)
+                    # s4 = get_tick_down(s3, ticks=2) # 2 tick di bawah S3
+                    # sl = get_tick_down(s3, ticks=4) # 4 tick di bawah S3 (Cutloss)
+                    sl = round_bei(lo + (range_fibo * 0.333))
                     
                     tp1 = round_bei(lo + (range_fibo * 1.128))
                     tp2 = round_bei(lo + (range_fibo * 1.272))
@@ -108,7 +109,7 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                     if last_c > s1: pos = "> S1 (Strong)"
                     elif last_c > s2: pos = "> S2"
                     elif last_c > s3: pos = "> S3"
-                    elif last_c > s4: pos = "> S4"
+                    # elif last_c > s4: pos = "> S4"
                     else: pos = "Near SL"
 
                     results.append({
@@ -119,7 +120,9 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                         "Close %": f"{gain_c_pct:.2f}%",
                         "Close": last_c,
                         "Position": pos,
-                        "S1": s1, "S2A": s2a, "S2": s2, "S3": s3, "S4": s4, "SL": sl,
+                        "S1": s1, "S2A": s2a, "S2": s2, "S3": s3, 
+                        # "S4": s4, 
+                        "SL": sl,
                         "TP1": tp1, "TP2": tp2, "TP3": tp3,
                         "Date target": tgl_target_hit,
                         "Sort_Val": gain_c_pct
@@ -176,8 +179,8 @@ if btn_scan:
             for idx, row in enumerate(df_hasil.to_dict(orient='records')):
                 with cols[idx % 3]:
                     with st.container(border=True):
-                        # Hitung Avg Price dengan skema 20-30-40-10
-                        avg_p = (row['S1']*0.20) + (row['S2']*0.30) + (row['S3']*0.40) + (row['S4']*0.10)
+                        # Hitung Avg Price dengan skema 20-30-40 (90% modal)
+                        avg_p = (row['S1']*0.20) + (row['S2']*0.30) + (row['S3']*0.40))
                         
                         risk_pct = ((row['SL'] - avg_p) / avg_p) * 100
                         tp1_pct = ((row['TP1'] - avg_p) / avg_p) * 100
@@ -190,7 +193,7 @@ if btn_scan:
                             st.success(f"**Buy Zone:**")
                             st.write(f"- S1: **{row['S1']}**")
                             st.write(f"- S2: **{row['S2A']}** - **{row['S2']}**")
-                            st.write(f"- S3: **{row['S3']}** - **{row['S4']}**")
+                            st.write(f"- S3: **{row['S3']}**")
                             # st.write(f"- S4: **{row['S4']}**")
                         with c2:
                             st.error(f"**Sell Zone:**")
