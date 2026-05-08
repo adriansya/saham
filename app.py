@@ -101,8 +101,8 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                     tp2 = round_bei(lo + (range_fibo * 1.272))
                     tp3 = round_bei(lo + (range_fibo * 1.414))
 
-                    if last_c < sl:
-                        continue
+                    # if last_c < sl:
+                        # continue
                     if last_c < 100: 
                         continue
 
