@@ -82,7 +82,7 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                 df_target_hit = df_day[df_day['High'] >= target_val]
                 tgl_target_hit = df_target_hit.index[0].strftime("%d-%m-%Y") if not df_target_hit.empty else "-"
 
-                last_c = float(df_day['Close'].iloc[-1])
+                last_c = round_bei(float(df_day['Close'].iloc[-1]))
                 gain_c_pct = ((last_c - lo) / lo) * 100
 
                 if gain_h_pct >= 24:
@@ -107,11 +107,11 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                         continue
 
                     if last_c > s1: pos = "> S1 (Strong)"
+                    elif last_c == s1: pos = "= S1"
                     elif last_c > s2: pos = "> S2"
-                    elif last_c > s3: pos = "> S3"
-                    elif last_c == s1: pos = "S1"
-                    elif last_c == s2: pos = "S2"
-                    elif last_c == s3: pos = "S3"
+                    elif last_c == s2: pos = "= S2"
+                    elif last_c > s3: pos = "> S3"                    
+                    elif last_c == s3: pos = "= S3"
                     # elif last_c > s4: pos = "> S4"
                     else: pos = "Near SL"
 
