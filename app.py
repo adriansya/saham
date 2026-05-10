@@ -107,11 +107,11 @@ def jalankan_scanner_final(tickers, tgl_acuan, tgl_target, jam):
                         continue
 
                     if last_c > s1: pos = "> S1 (Strong)"
-                    elif last_c == s1: pos = "= S1"
+                    elif last_c == s1: pos = "S1"
                     elif last_c > s2: pos = "> S2"
-                    elif last_c == s2: pos = "= S2"
+                    elif last_c == s2: pos = "S2"
                     elif last_c > s3: pos = "> S3"                    
-                    elif last_c == s3: pos = "= S3"
+                    elif last_c == s3: pos = "S3"
                     # elif last_c > s4: pos = "> S4"
                     else: pos = "Near SL"
 
